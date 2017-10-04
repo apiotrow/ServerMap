@@ -1,19 +1,28 @@
 
 class Grid{
 	constructor(app, gridW, gridH){
-		const separate = true
+
+		//separate graphics object for each square, or a single one for all.
+		//false: good framerate when grid static, severe drop when editing.
+		//true: poor framerate when grid static, small drop when editing
+		const separate = false
+
+		//whether to convert grid object into a sprite.
+		//only usable with separate = false
+		const renderAsTexture = false
 
 		let gridGraphics
 		if(!separate){
 			gridGraphics = new PIXI.Graphics()
 			gridGraphics.beginFill(0xFF3300)
-			app.stage.addChild(gridGraphics)
+			if(!renderAsTexture)
+				app.stage.addChild(gridGraphics)
 		}
 
-		let gridD = 100
+		let gridD = 50
 		let gridSquHoriz = gridD
 		let gridSquVert = gridD
-		let gridSquGap = 0
+		let gridSquGap = 0.5
 		let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
 		let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
 		this.grid = []
@@ -48,6 +57,12 @@ class Grid{
 			rowCount++
 		}
 
+		if(renderAsTexture){
+			let te = app.renderer.generateTexture(gridGraphics)
+			this.sprite = new PIXI.Sprite(te)
+			app.stage.addChild(this.sprite)
+		}
+
 		this.hoverX = -1
 		this.hoverY = -1
 		this.mouseDown = false
@@ -68,14 +83,14 @@ class Grid{
 
 		let callUpdate = ()=> {
 
-			this.update(separate, gridGraphics)
+			this.update(separate, gridGraphics, app, renderAsTexture)
 		}
 		let ticker = PIXI.ticker.shared
 		ticker.add(callUpdate)
 		ticker.start()
 	}
 
-	update(separate, gridGraphics){
+	update(separate, gridGraphics, app, renderAsTexture){
 		let hoveredSqu
 
 		if(this.grid[this.hoverY] !== undefined && this.grid[this.hoverY][this.hoverX] !== undefined){
@@ -110,6 +125,11 @@ class Grid{
 
 							gridGraphics.drawRect(x, y, grdSquW, grdSquH)
 						}
+					}
+
+					if(renderAsTexture){
+						let te = app.renderer.generateTexture(gridGraphics)
+						this.sprite.texture = te
 					}
 				}
 			}
