@@ -1,10 +1,8 @@
 
 class Grid{
-	constructor(app, gridW, gridH){
-		const online = false
+	constructor(app, initData, ws){
+		this.ws = ws
 
-		if(online)
-			this.ws = new WebSocket("ws://127.0.0.1:5000/")
 
 		//separate graphics object for each square, or a single one for all.
 		//false: good framerate when grid static, severe drop when editing.
@@ -23,43 +21,54 @@ class Grid{
 				app.stage.addChild(gridGraphics)
 		}
 
-		let gridD = 50
-		let gridSquHoriz = gridD
-		let gridSquVert = gridD
-		let gridSquGap = 0.5
-		let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
-		let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
-		this.grid = []
-		for(let i = 0; i < gridSquVert; i++){
-			let row = []
-			for(let j = 0; j < gridSquHoriz; j++){
-				row.push(undefined)
-			}
-			this.grid.push(row)
-		}
-		let rowCount = 0
-		let colCount
+		this.grid = initData.grid
 
-		for(let i = gridSquGap; i < gridW; i += grdSquW + (gridSquGap * 2)){
-			colCount = 0
-			for(let j = gridSquGap; j < gridH; j += grdSquH + (gridSquGap * 2)){
+		// let gridW = initData.gridW
+		// let gridH = initData.gridH
+		// let gridD = initData.gridD
+		// let gridSquHoriz = initData.gridD
+		// let gridSquVert = initData.gridD
+		// let gridSquGap = initData.gridSquGap
 
-				if(separate){
-					let squ = new PIXI.Graphics()
-					squ.beginFill(0xFF3300)
-					squ.drawRect(i, j, grdSquW, grdSquH)
-					app.stage.addChild(squ)
-					this.grid[rowCount][colCount] = squ
-					colCount++
-				}else if(!separate){
-					gridGraphics.drawRect(i, j, grdSquW, grdSquH)
-					this.grid[rowCount][colCount] = [i, j, grdSquW, grdSquH, true]
-					colCount++
-				}
+		// let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
+		// let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
+		// this.grid = []
+		// for(let i = 0; i < gridSquVert; i++){
+		// 	let row = []
+		// 	for(let j = 0; j < gridSquHoriz; j++){
+		// 		row.push(undefined)
+		// 	}
+		// 	this.grid.push(row)
+		// }
 
-			}
-			rowCount++
-		}
+		// let rowCount = 0
+		// let colCount
+		// for(let i = gridSquGap; i < gridW; i += grdSquW + (gridSquGap * 2)){
+		// 	colCount = 0
+		// 	for(let j = gridSquGap; j < gridH; j += grdSquH + (gridSquGap * 2)){
+
+		// 		if(separate){
+		// 			let squ = new PIXI.Graphics()
+		// 			squ.beginFill(0xFF3300)
+		// 			squ.drawRect(i, j, grdSquW, grdSquH)
+		// 			app.stage.addChild(squ)
+		// 			this.grid[rowCount][colCount] = squ
+		// 			colCount++
+		// 		}else if(!separate){
+		// 			gridGraphics.drawRect(i, j, grdSquW, grdSquH)
+		// 			this.grid[rowCount][colCount] = [i, j, grdSquW, grdSquH, true]
+		// 			colCount++
+		// 		}
+
+		// 	}
+		// 	rowCount++
+		// }
+
+		let grdSquW = initData.grdSquW
+		let grdSquH = initData.grdSquH
+		let gridSquGap = initData.gridSquGap
+
+		this.updateGrid(gridGraphics)
 
 		if(renderAsTexture){
 			let te = app.renderer.generateTexture(gridGraphics)
@@ -86,12 +95,46 @@ class Grid{
 		})
 
 		let callUpdate = ()=> {
-
 			this.update(separate, gridGraphics, app, renderAsTexture)
 		}
 		let ticker = PIXI.ticker.shared
 		ticker.add(callUpdate)
 		ticker.start()
+
+		this.ws.addEventListener("message", (event)=> {
+		    let data = JSON.parse(event.data)
+
+			if(data.header == "changeSq"){
+				let gridX = data.value.gridX
+				let gridY = data.value.gridY
+
+				console.log("other player did thing")
+
+				gridGraphics.clear()
+				gridGraphics.beginFill(0xFF3300)
+				this.grid[gridX][gridY][4] = false
+				this.updateGrid(gridGraphics)
+			}
+		})
+	}
+
+	updateGrid(gridGraphics){
+		for(let i = 0; i < this.grid.length; i++){
+			for(let j = 0; j < this.grid[i].length; j++){
+
+				let sq = this.grid[i][j]
+
+				if(sq[4] == false)
+					continue
+
+				let x = sq[0]
+				let y = sq[1]
+				let grdSquW = sq[2]
+				let grdSquH = sq[3]
+
+				gridGraphics.drawRect(x, y, grdSquW, grdSquH)
+			}
+		}
 	}
 
 	update(separate, gridGraphics, app, renderAsTexture){
@@ -107,29 +150,26 @@ class Grid{
 					gridGraphics.beginFill(0xFF3300)
 					hoveredSqu = this.grid[this.hoverX][this.hoverY]
 
-					hoveredSqu[4] = false
+					if(hoveredSqu[4] == true){
+						hoveredSqu[4] = false
+
+						let data = {
+							header: "changeSq",
+							value: {
+								gridX: this.hoverX,
+								gridY: this.hoverY
+							}
+						}
+						this.ws.send(JSON.stringify(data))
+					}
+
 
 					let x = hoveredSqu[0]
 					let y = hoveredSqu[1]
 					let grdSquW = hoveredSqu[2]
 					let grdSquH = hoveredSqu[3]
 
-					for(let i = 0; i < this.grid.length; i++){
-						for(let j = 0; j < this.grid[i].length; j++){
-
-							let sq = this.grid[i][j]
-
-							if(sq[4] == false)
-								continue
-
-							let x = sq[0]
-							let y = sq[1]
-							let grdSquW = sq[2]
-							let grdSquH = sq[3]
-
-							gridGraphics.drawRect(x, y, grdSquW, grdSquH)
-						}
-					}
+					this.updateGrid(gridGraphics)
 
 					if(renderAsTexture){
 						let te = app.renderer.generateTexture(gridGraphics)

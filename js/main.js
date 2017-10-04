@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
 		let data = JSON.parse(event.data)
 
 		if(data.header == "initData"){
-			let value = data.value
+			let initData = data.value
 
-			let gridW = value.gridW
-			let gridH = value.gridH
+			let gridW = initData.gridW
+			let gridH = initData.gridH
 			let app = new PIXI.Application(gridW, gridH, 
 			{
 				antialias: false, 
@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
 			})
 			document.body.appendChild(app.view)
 
-			let grids = new Grid(app, gridW, gridH)
+			let grids = new Grid(app, initData, this.ws)
 		}
+
+		// if(data.header == "changeSq"){
+		// 	console.log("chs")
+		// }
 	}
 })

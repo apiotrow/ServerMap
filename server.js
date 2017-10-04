@@ -30,29 +30,90 @@ const wss = new SocketServer({ server: httpserver })
 
 //when a player logs in
 wss.on('connection', function connection(ws, req){
-	
-	console.log("conenction")
+
+	// let gridW = 600
+	// let gridH = 600
+	// let gridD = 50
+	// let gridSquGap = 0.5
+	// let initData = {
+	// 	header: "initData",
+	// 	value: {
+	// 		gridW: gridW,
+	// 		gridH: gridH,
+	// 		gridD: gridD,
+	// 		gridSquGap: gridSquGap
+	// 	}
+	// }
 
 	let gridW = 600
 	let gridH = 600
-	let data = {
+	let gridD = 50
+	let gridSquHoriz = gridD
+	let gridSquVert = gridD
+	let gridSquGap = 0.5
+
+	let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
+	let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
+	let grid = []
+	for(let i = 0; i < gridSquVert; i++){
+		let row = []
+		for(let j = 0; j < gridSquHoriz; j++){
+			row.push(undefined)
+		}
+		grid.push(row)
+	}
+	
+	let rowCount = 0
+	let colCount
+	for(let i = gridSquGap; i < gridW; i += grdSquW + (gridSquGap * 2)){
+		colCount = 0
+		for(let j = gridSquGap; j < gridH; j += grdSquH + (gridSquGap * 2)){
+			// gridGraphics.drawRect(i, j, grdSquW, grdSquH)
+			grid[rowCount][colCount] = [i, j, grdSquW, grdSquH, true]
+			colCount++
+		}
+		rowCount++
+	}
+
+	let initData = {
 		header: "initData",
 		value: {
 			gridW: gridW,
-			gridH: gridH
+			gridH: gridH,
+			grdSquW: grdSquW,
+			grdSquH: grdSquH,
+			gridSquGap: gridSquGap,
+			grid: grid
 		}
 	}
-	sendMessage(ws, JSON.stringify(data))
+
+	sendMessage(ws, JSON.stringify(initData))
 
 	ws.on('message', function incoming(message){
-    	//message to send to player
-    	let requestAccountData = {
-			header: "requestAccountData",
-			value: newAcctData
+		let data = JSON.parse(message)
+
+		let header = data.header
+
+		if(header == "changeSq"){
+			let changeSq = {
+				header: "changeSq",
+				value: data.value
+			}
+
+			wss.clients.forEach((client) => {
+				sendMessage(client, JSON.stringify(changeSq))
+			})
 		}
 
-    	//send player their new account data
-		sendMessage(ws, JSON.stringify(requestAccountData))
+
+    	//message to send to player
+  //   	let requestAccountData = {
+		// 	header: "requestAccountData",
+		// 	value: newAcctData
+		// }
+
+  //   	//send player their new account data
+		// sendMessage(ws, JSON.stringify(requestAccountData))
 	})
 })
 
