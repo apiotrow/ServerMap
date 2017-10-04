@@ -1,6 +1,10 @@
 
 class Grid{
 	constructor(app, gridW, gridH){
+		const online = false
+
+		if(online)
+			this.ws = new WebSocket("ws://127.0.0.1:5000/")
 
 		//separate graphics object for each square, or a single one for all.
 		//false: good framerate when grid static, severe drop when editing.

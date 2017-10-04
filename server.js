@@ -30,6 +30,20 @@ const wss = new SocketServer({ server: httpserver })
 
 //when a player logs in
 wss.on('connection', function connection(ws, req){
+	
+	console.log("conenction")
+
+	let gridW = 600
+	let gridH = 600
+	let data = {
+		header: "initData",
+		value: {
+			gridW: gridW,
+			gridH: gridH
+		}
+	}
+	sendMessage(ws, JSON.stringify(data))
+
 	ws.on('message', function incoming(message){
     	//message to send to player
     	let requestAccountData = {
