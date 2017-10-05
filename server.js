@@ -36,17 +36,18 @@ let gridW = 600
 let gridH = 600
 
 //initial grid data
-let gridD = 1
+let gridD = 3
 let gridSGap = 1
 let gridSW = (gridW / gridD) - (gridSGap * 2)
 let gridSH = (gridH / gridD) - (gridSGap * 2)
+//color of non-selected squares
+let virginColor = 0xffffff
 
 //grid information
 let grid = []
 
 //initialize grid
 initializeGrid(gridD)
-
 
 wss.on('connection', function connection(ws, req){
 
@@ -59,7 +60,11 @@ wss.on('connection', function connection(ws, req){
 			gridSW: gridSW,
 			gridSH: gridSH,
 			gridSGap: gridSGap,
-			grid: grid
+			grid: grid,
+			virginColor: virginColor,
+
+			//player's personal color
+			color: '0x' + Math.floor(Math.random() * 16777215).toString(16)
 		}
 	}
 
@@ -75,10 +80,11 @@ wss.on('connection', function connection(ws, req){
 		if(header == "changeS"){
 			let gridX = data.value.gridX
 			let gridY = data.value.gridY
+			let color = data.value.color
 
 			//if player is allowed, change square and notify all clients
-			if(grid[gridX][gridY][4] == true){
-				grid[gridX][gridY][4] = false
+			if(grid[gridX][gridY][4] == virginColor){
+				grid[gridX][gridY][4] = color
 
 				//if all squares are gone, reset game
 				if(squaresGone == (gridD * gridD) - 1){
@@ -162,16 +168,16 @@ function initializeGrid(D){
 	}
 
 	//set initial data for each square
-	//(upper-left X and Y coord, length, width, and if it's visible)
-	let rowCount = 0
-	let colCount
-	for(let i = gridSGap; i < gridW; i += gridSW + (gridSGap * 2)){
-		colCount = 0
-		for(let j = gridSGap; j < gridH; j += gridSH + (gridSGap * 2)){
-			grid[rowCount][colCount] = [i, j, gridSW, gridSH, true]
-			colCount++
+	//(upper-left X and Y coord, length, width, and if it's selected)
+	let wCount = gridSGap
+	let hCount = gridSGap
+	for(let i = 0; i < grid.length; i++){
+		hCount = gridSGap
+		for(let j = 0; j < grid[i].length; j++){
+			grid[i][j] = [wCount, hCount, gridSW, gridSH, virginColor]
+			hCount += gridSH + (gridSGap * 2)
 		}
-		rowCount++
+		wCount += gridSW + (gridSGap * 2)
 	}
 }
 

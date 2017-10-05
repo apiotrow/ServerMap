@@ -13,10 +13,14 @@ class Grid{
 		//grid positions and on/off bools
 		this.grid = initData.grid
 
+		console.log(this.grid)
+
 		//get grid data from server
 		let gridSW = initData.gridSW
 		let gridSH = initData.gridSH
 		let gridSGap = initData.gridSGap
+		this.color = initData.color
+		this.virginColor = initData.virginColor
 
 		//render grid
 		this.updateGrid(gridGraphics)
@@ -76,7 +80,9 @@ class Grid{
 				//set changed square
 				let gridX = data.value.gridX
 				let gridY = data.value.gridY
-				this.grid[gridX][gridY][4] = false
+				let color = data.value.color
+
+				this.grid[gridX][gridY][4] = color
 
 				//render updated grid
 				this.updateGrid(gridGraphics)
@@ -87,7 +93,7 @@ class Grid{
 	//erase and redraw grid
 	updateGrid(gridGraphics){
 		gridGraphics.clear()
-		gridGraphics.beginFill(0xFF3300)
+		// gridGraphics.beginFill(this.color)
 
 		for(let i = 0; i < this.grid.length; i++){
 			for(let j = 0; j < this.grid[i].length; j++){
@@ -95,14 +101,17 @@ class Grid{
 				let S = this.grid[i][j]
 
 				//if square isn't supposed to be rendered, skip it
-				if(S[4] == false)
-					continue
+				// if(S[4] == false)
+				// 	continue
 
 				//render square
 				let x = S[0]
 				let y = S[1]
 				let gridSW = S[2]
 				let gridSH = S[3]
+				let color = S[4]
+
+				gridGraphics.beginFill(color)
 				gridGraphics.drawRect(x, y, gridSW, gridSH)
 			}
 		}
@@ -122,20 +131,21 @@ class Grid{
 		if(this.grid[this.hoverY] !== undefined 
 			&& this.grid[this.hoverY][this.hoverX] !== undefined)
 		{
-			//on mouse click, delete square
+			//on mouse click, change square color
 			if(this.mouseDown){
 				//square being hovered over
 				let hoveredS = this.grid[this.hoverX][this.hoverY]
 
 				//let server know we changed a square.
-				//only attempt this if square isn't already deleted
-				if(hoveredS[4] == true){
+				//only attempt this if square isn't already changed
+				if(hoveredS[4] == this.virginColor){
 					//square to change
 					let changeS = {
 						header: "changeS",
 						value: {
 							gridX: this.hoverX,
-							gridY: this.hoverY
+							gridY: this.hoverY,
+							color: this.color
 						}
 					}
 
