@@ -54,21 +54,21 @@ class Grid{
 		    let data = JSON.parse(event.data)
 
 		    //change Sares that other players have changed
-			if(data.header == "changeS"){
-				let gridX = data.value.gridX
-				let gridY = data.value.gridY
-
-				this.grid[gridX][gridY][4] = false
-				this.updateGrid(gridGraphics)
-			}
-
-			//change Sares that other players have changed
 			if(data.header == "resetGame"){
 				//prevent square in new game from getting deleted
 				//by click that started in previous game
 				this.suppressClick = true
 
 				this.grid = data.value
+				this.updateGrid(gridGraphics)
+			}
+
+		    //change Sares that other players have changed
+			if(data.header == "changeS"){
+				let gridX = data.value.gridX
+				let gridY = data.value.gridY
+
+				this.grid[gridX][gridY][4] = false
 				this.updateGrid(gridGraphics)
 			}
 		})
@@ -96,17 +96,16 @@ class Grid{
 			}
 		}
 
-		// if(this.suppressClick){
+		if(this.suppressClick){
 			//remove if-then clause around this to disallow
 			//drag-removing of squares
-			// this.mouseDown = false
+			this.mouseDown = false
 			
-			// this.suppressClick = false
-		// }
+			this.suppressClick = false
+		}
 	}
 
 	update(gridGraphics, app){
-		console.log(this.suppressClick)
 		//if mouse is over a square
 		if(this.grid[this.hoverY] !== undefined 
 			&& this.grid[this.hoverY][this.hoverX] !== undefined)

@@ -31,38 +31,37 @@ const wss = new SocketServer({ server: httpserver })
 //count for squares
 let squaresGone = 0
 
+//initialize grid data
+let gridW = 600
+let gridH = 600
+let gridD = 3
+let gridSHoriz = gridD
+let gridSVert = gridD
+let gridSGap = 0.5
+let grdSW = (gridW / gridSHoriz) - (gridSGap * 2)
+let grdSH = (gridH / gridSVert) - (gridSGap * 2)
+let grid = []
+for(let i = 0; i < gridSVert; i++){
+	let row = []
+	for(let j = 0; j < gridSHoriz; j++){
+		row.push(undefined)
+	}
+	grid.push(row)
+}
+
+let rowCount = 0
+let colCount
+for(let i = gridSGap; i < gridW; i += grdSW + (gridSGap * 2)){
+	colCount = 0
+	for(let j = gridSGap; j < gridH; j += grdSH + (gridSGap * 2)){
+		grid[rowCount][colCount] = [i, j, grdSW, grdSH, true]
+		colCount++
+	}
+	rowCount++
+}
+
 //when a player logs in
 wss.on('connection', function connection(ws, req){
-
-	//send initial data
-	let gridW = 600
-	let gridH = 600
-	let gridD = 2
-	let gridSHoriz = gridD
-	let gridSVert = gridD
-	let gridSGap = 0.5
-
-	let grdSW = (gridW / gridSHoriz) - (gridSGap * 2)
-	let grdSH = (gridH / gridSVert) - (gridSGap * 2)
-	let grid = []
-	for(let i = 0; i < gridSVert; i++){
-		let row = []
-		for(let j = 0; j < gridSHoriz; j++){
-			row.push(undefined)
-		}
-		grid.push(row)
-	}
-	
-	let rowCount = 0
-	let colCount
-	for(let i = gridSGap; i < gridW; i += grdSW + (gridSGap * 2)){
-		colCount = 0
-		for(let j = gridSGap; j < gridH; j += grdSH + (gridSGap * 2)){
-			grid[rowCount][colCount] = [i, j, grdSW, grdSH, true]
-			colCount++
-		}
-		rowCount++
-	}
 
 	let initData = {
 		header: "initData",
@@ -94,22 +93,8 @@ wss.on('connection', function connection(ws, req){
 			if(grid[gridX][gridY][4] == true){
 				grid[gridX][gridY][4] = false
 
-				let changeS = {
-					header: "changeS",
-					value: data.value
-				}
-
-				wss.clients.forEach((client) => {
-					sendMessage(client, JSON.stringify(changeS))
-				})
-
-				//add to squares gone count
-				squaresGone++
-
 				//if all squares are gone, reset game
-				if(squaresGone == gridD * gridD){
-					console.log("done")
-
+				if(squaresGone == (gridD * gridD) - 1){
 					squaresGone = 0
 					for(let i = 0; i < grid.length; i++){
 						for(let j = 0; j < grid[i].length; j++){
@@ -121,9 +106,23 @@ wss.on('connection', function connection(ws, req){
 						header: "resetGame",
 						value: grid
 					}
+
 					wss.clients.forEach((client) => {
 						sendMessage(client, JSON.stringify(resetGame))
 					})
+				}else{
+
+					let changeS = {
+						header: "changeS",
+						value: data.value
+					}
+
+					wss.clients.forEach((client) => {
+						sendMessage(client, JSON.stringify(changeS))
+					})
+
+					//add to squares gone count
+					squaresGone++
 				}
 			}
 		}
