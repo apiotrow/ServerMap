@@ -1,4 +1,5 @@
 let Grid = require('./Grid.js')
+let Bot = require('./Bot.js')
 
 //for development. causes changes to server.js to reload browser
 let server
@@ -13,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	let gameView = document.getElementById('game')
 
 	this.ws = new WebSocket("ws://127.0.0.1:5000/")
-
 	this.ws.onmessage = (event)=> {
 		let data = JSON.parse(event.data)
 
@@ -31,7 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
 			})
 			document.body.appendChild(app.view)
 
-			let grids = new Grid(app, initData, this.ws)
+			let game = new Grid(app, initData, this.ws)
 		}
+	}
+
+	//bots
+	for(let i = 0; i < 1; i++){
+		let bot = new Bot()
 	}
 })

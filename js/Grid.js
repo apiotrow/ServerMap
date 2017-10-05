@@ -13,8 +13,6 @@ class Grid{
 		//grid positions and on/off bools
 		this.grid = initData.grid
 
-		console.log(this.grid)
-
 		//get grid data from server
 		let gridSW = initData.gridSW
 		let gridSH = initData.gridSH
@@ -100,10 +98,6 @@ class Grid{
 				//square for this iteration
 				let S = this.grid[i][j]
 
-				//if square isn't supposed to be rendered, skip it
-				// if(S[4] == false)
-				// 	continue
-
 				//render square
 				let x = S[0]
 				let y = S[1]
@@ -126,6 +120,28 @@ class Grid{
 		}
 	}
 
+	//let server know we changed a square.
+	//only do it if square isn't already changed
+	paintSquare(x, y){
+		//selected square
+		let S = this.grid[x][y]
+
+		if(S[4] == this.virginColor){
+			//square to change
+			let changeS = {
+				header: "changeS",
+				value: {
+					gridX: x,
+					gridY: y,
+					color: this.color
+				}
+			}
+
+			//notify server
+			this.ws.send(JSON.stringify(changeS))
+		}
+	}
+
 	update(gridGraphics, app){
 		//if mouse is over a square
 		if(this.grid[this.hoverY] !== undefined 
@@ -133,25 +149,7 @@ class Grid{
 		{
 			//on mouse click, change square color
 			if(this.mouseDown){
-				//square being hovered over
-				let hoveredS = this.grid[this.hoverX][this.hoverY]
-
-				//let server know we changed a square.
-				//only attempt this if square isn't already changed
-				if(hoveredS[4] == this.virginColor){
-					//square to change
-					let changeS = {
-						header: "changeS",
-						value: {
-							gridX: this.hoverX,
-							gridY: this.hoverY,
-							color: this.color
-						}
-					}
-
-					//notify server
-					this.ws.send(JSON.stringify(changeS))
-				}
+				this.paintSquare(this.hoverX, this.hoverY)
 			}
 		}
 	}
