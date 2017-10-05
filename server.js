@@ -28,36 +28,26 @@ app.use(express.static(__dirname))
 var httpserver = http.createServer(app).listen(PORT)
 const wss = new SocketServer({ server: httpserver })
 
+//count for squares
+let squaresGone = 0
+
 //when a player logs in
 wss.on('connection', function connection(ws, req){
 
-	// let gridW = 600
-	// let gridH = 600
-	// let gridD = 50
-	// let gridSquGap = 0.5
-	// let initData = {
-	// 	header: "initData",
-	// 	value: {
-	// 		gridW: gridW,
-	// 		gridH: gridH,
-	// 		gridD: gridD,
-	// 		gridSquGap: gridSquGap
-	// 	}
-	// }
-
+	//send initial data
 	let gridW = 600
 	let gridH = 600
-	let gridD = 50
-	let gridSquHoriz = gridD
-	let gridSquVert = gridD
-	let gridSquGap = 0.5
+	let gridD = 2
+	let gridSHoriz = gridD
+	let gridSVert = gridD
+	let gridSGap = 0.5
 
-	let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
-	let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
+	let grdSW = (gridW / gridSHoriz) - (gridSGap * 2)
+	let grdSH = (gridH / gridSVert) - (gridSGap * 2)
 	let grid = []
-	for(let i = 0; i < gridSquVert; i++){
+	for(let i = 0; i < gridSVert; i++){
 		let row = []
-		for(let j = 0; j < gridSquHoriz; j++){
+		for(let j = 0; j < gridSHoriz; j++){
 			row.push(undefined)
 		}
 		grid.push(row)
@@ -65,11 +55,10 @@ wss.on('connection', function connection(ws, req){
 	
 	let rowCount = 0
 	let colCount
-	for(let i = gridSquGap; i < gridW; i += grdSquW + (gridSquGap * 2)){
+	for(let i = gridSGap; i < gridW; i += grdSW + (gridSGap * 2)){
 		colCount = 0
-		for(let j = gridSquGap; j < gridH; j += grdSquH + (gridSquGap * 2)){
-			// gridGraphics.drawRect(i, j, grdSquW, grdSquH)
-			grid[rowCount][colCount] = [i, j, grdSquW, grdSquH, true]
+		for(let j = gridSGap; j < gridH; j += grdSH + (gridSGap * 2)){
+			grid[rowCount][colCount] = [i, j, grdSW, grdSH, true]
 			colCount++
 		}
 		rowCount++
@@ -80,43 +69,66 @@ wss.on('connection', function connection(ws, req){
 		value: {
 			gridW: gridW,
 			gridH: gridH,
-			grdSquW: grdSquW,
-			grdSquH: grdSquH,
-			gridSquGap: gridSquGap,
+			grdSW: grdSW,
+			grdSH: grdSH,
+			gridSGap: gridSGap,
 			grid: grid
 		}
 	}
 
+	//send it all to client who just connected
 	sendMessage(ws, JSON.stringify(initData))
 
+	//listeners
 	ws.on('message', function incoming(message){
 		let data = JSON.parse(message)
 
 		let header = data.header
 
-		if(header == "changeSq"){
-			let changeSq = {
-				header: "changeSq",
-				value: data.value
+		//player requesting to change a square
+		if(header == "changeS"){
+			let gridX = data.value.gridX
+			let gridY = data.value.gridY
+
+			//if player is allowed, change square and notify all clients
+			if(grid[gridX][gridY][4] == true){
+				grid[gridX][gridY][4] = false
+
+				let changeS = {
+					header: "changeS",
+					value: data.value
+				}
+
+				wss.clients.forEach((client) => {
+					sendMessage(client, JSON.stringify(changeS))
+				})
+
+				//add to squares gone count
+				squaresGone++
+
+				//if all squares are gone, reset game
+				if(squaresGone == gridD * gridD){
+					console.log("done")
+
+					squaresGone = 0
+					for(let i = 0; i < grid.length; i++){
+						for(let j = 0; j < grid[i].length; j++){
+							grid[i][j][4] = true
+						}
+					}
+
+					let resetGame = {
+						header: "resetGame",
+						value: grid
+					}
+					wss.clients.forEach((client) => {
+						sendMessage(client, JSON.stringify(resetGame))
+					})
+				}
 			}
-
-			wss.clients.forEach((client) => {
-				sendMessage(client, JSON.stringify(changeSq))
-			})
 		}
-
-
-    	//message to send to player
-  //   	let requestAccountData = {
-		// 	header: "requestAccountData",
-		// 	value: newAcctData
-		// }
-
-  //   	//send player their new account data
-		// sendMessage(ws, JSON.stringify(requestAccountData))
 	})
 })
-
 
 function sendMessage(reciever, whatToSend){
 	if(reciever.readyState === reciever.OPEN){

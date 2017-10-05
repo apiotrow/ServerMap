@@ -1,88 +1,35 @@
 
 class Grid{
 	constructor(app, initData, ws){
+		//websocket
 		this.ws = ws
 
-
-		//separate graphics object for each square, or a single one for all.
-		//false: good framerate when grid static, severe drop when editing.
-		//true: poor framerate when grid static, small drop when editing
-		const separate = false
-
-		//whether to convert grid object into a sprite.
-		//only usable with separate = false
-		const renderAsTexture = false
-
+		//setup grid graphics
 		let gridGraphics
-		if(!separate){
-			gridGraphics = new PIXI.Graphics()
-			gridGraphics.beginFill(0xFF3300)
-			if(!renderAsTexture)
-				app.stage.addChild(gridGraphics)
-		}
+		gridGraphics = new PIXI.Graphics()
+		gridGraphics.beginFill(0xFF3300)
+		app.stage.addChild(gridGraphics)
 
+		//grid positions and on/off bools
 		this.grid = initData.grid
 
-		// let gridW = initData.gridW
-		// let gridH = initData.gridH
-		// let gridD = initData.gridD
-		// let gridSquHoriz = initData.gridD
-		// let gridSquVert = initData.gridD
-		// let gridSquGap = initData.gridSquGap
+		//get grid data from server
+		let grdSW = initData.grdSW
+		let grdSH = initData.grdSH
+		let gridSGap = initData.gridSGap
 
-		// let grdSquW = (gridW / gridSquHoriz) - (gridSquGap * 2)
-		// let grdSquH = (gridH / gridSquVert) - (gridSquGap * 2)
-		// this.grid = []
-		// for(let i = 0; i < gridSquVert; i++){
-		// 	let row = []
-		// 	for(let j = 0; j < gridSquHoriz; j++){
-		// 		row.push(undefined)
-		// 	}
-		// 	this.grid.push(row)
-		// }
-
-		// let rowCount = 0
-		// let colCount
-		// for(let i = gridSquGap; i < gridW; i += grdSquW + (gridSquGap * 2)){
-		// 	colCount = 0
-		// 	for(let j = gridSquGap; j < gridH; j += grdSquH + (gridSquGap * 2)){
-
-		// 		if(separate){
-		// 			let squ = new PIXI.Graphics()
-		// 			squ.beginFill(0xFF3300)
-		// 			squ.drawRect(i, j, grdSquW, grdSquH)
-		// 			app.stage.addChild(squ)
-		// 			this.grid[rowCount][colCount] = squ
-		// 			colCount++
-		// 		}else if(!separate){
-		// 			gridGraphics.drawRect(i, j, grdSquW, grdSquH)
-		// 			this.grid[rowCount][colCount] = [i, j, grdSquW, grdSquH, true]
-		// 			colCount++
-		// 		}
-
-		// 	}
-		// 	rowCount++
-		// }
-
-		let grdSquW = initData.grdSquW
-		let grdSquH = initData.grdSquH
-		let gridSquGap = initData.gridSquGap
-
+		//render grid
 		this.updateGrid(gridGraphics)
 
-		if(renderAsTexture){
-			let te = app.renderer.generateTexture(gridGraphics)
-			this.sprite = new PIXI.Sprite(te)
-			app.stage.addChild(this.sprite)
-		}
-
+		//setup inputs
 		this.hoverX = -1
 		this.hoverY = -1
 		this.mouseDown = false
+		this.suppressClick = false //prevent click from deleting square
 		app.stage.interactive = true
 		app.stage.on('mousemove', (event)=>{
-			this.hoverX = Math.floor(event.data.global.x / (grdSquW + (gridSquGap * 2)))
-			this.hoverY = Math.floor(event.data.global.y / (grdSquH + (gridSquGap * 2)))
+			this.hoverX = Math.floor(event.data.global.x / (grdSW + (gridSGap * 2)))
+			this.hoverY = Math.floor(event.data.global.y / (grdSH + (gridSGap * 2)))
 		})
 		window.addEventListener('mousedown', (event)=>{
 			this.mouseDown = true
@@ -94,87 +41,89 @@ class Grid{
 			this.mouseDown = false
 		})
 
+		//init update loop
 		let callUpdate = ()=> {
-			this.update(separate, gridGraphics, app, renderAsTexture)
+			this.update(gridGraphics, app)
 		}
 		let ticker = PIXI.ticker.shared
 		ticker.add(callUpdate)
 		ticker.start()
 
+		//websocket listeners
 		this.ws.addEventListener("message", (event)=> {
 		    let data = JSON.parse(event.data)
 
-			if(data.header == "changeSq"){
+		    //change Sares that other players have changed
+			if(data.header == "changeS"){
 				let gridX = data.value.gridX
 				let gridY = data.value.gridY
 
-				console.log("other player did thing")
-
-				gridGraphics.clear()
-				gridGraphics.beginFill(0xFF3300)
 				this.grid[gridX][gridY][4] = false
+				this.updateGrid(gridGraphics)
+			}
+
+			//change Sares that other players have changed
+			if(data.header == "resetGame"){
+				//prevent square in new game from getting deleted
+				//by click that started in previous game
+				this.suppressClick = true
+
+				this.grid = data.value
 				this.updateGrid(gridGraphics)
 			}
 		})
 	}
 
+	//erase and redraw grid
 	updateGrid(gridGraphics){
+		gridGraphics.clear()
+		gridGraphics.beginFill(0xFF3300)
+
 		for(let i = 0; i < this.grid.length; i++){
 			for(let j = 0; j < this.grid[i].length; j++){
 
-				let sq = this.grid[i][j]
+				let S = this.grid[i][j]
 
-				if(sq[4] == false)
+				if(S[4] == false)
 					continue
 
-				let x = sq[0]
-				let y = sq[1]
-				let grdSquW = sq[2]
-				let grdSquH = sq[3]
+				let x = S[0]
+				let y = S[1]
+				let grdSW = S[2]
+				let grdSH = S[3]
 
-				gridGraphics.drawRect(x, y, grdSquW, grdSquH)
+				gridGraphics.drawRect(x, y, grdSW, grdSH)
 			}
 		}
+
+		// if(this.suppressClick){
+			//remove if-then clause around this to disallow
+			//drag-removing of squares
+			// this.mouseDown = false
+			
+			// this.suppressClick = false
+		// }
 	}
 
-	update(separate, gridGraphics, app, renderAsTexture){
-		let hoveredSqu
-
-		if(this.grid[this.hoverY] !== undefined && this.grid[this.hoverY][this.hoverX] !== undefined){
+	update(gridGraphics, app){
+		console.log(this.suppressClick)
+		//if mouse is over a square
+		if(this.grid[this.hoverY] !== undefined 
+			&& this.grid[this.hoverY][this.hoverX] !== undefined)
+		{
 			if(this.mouseDown){
-				if(separate){
-					hoveredSqu = this.grid[this.hoverX][this.hoverY]
-					hoveredSqu.clear()
-				}else if(!separate){
-					gridGraphics.clear()
-					gridGraphics.beginFill(0xFF3300)
-					hoveredSqu = this.grid[this.hoverX][this.hoverY]
+				let hoveredS = this.grid[this.hoverX][this.hoverY]
 
-					if(hoveredSqu[4] == true){
-						hoveredSqu[4] = false
-
-						let data = {
-							header: "changeSq",
-							value: {
-								gridX: this.hoverX,
-								gridY: this.hoverY
-							}
+				//let server know we changed a square
+				if(hoveredS[4] == true){
+					let changeS = {
+						header: "changeS",
+						value: {
+							gridX: this.hoverX,
+							gridY: this.hoverY
 						}
-						this.ws.send(JSON.stringify(data))
 					}
-
-
-					let x = hoveredSqu[0]
-					let y = hoveredSqu[1]
-					let grdSquW = hoveredSqu[2]
-					let grdSquH = hoveredSqu[3]
-
-					this.updateGrid(gridGraphics)
-
-					if(renderAsTexture){
-						let te = app.renderer.generateTexture(gridGraphics)
-						this.sprite.texture = te
-					}
+					this.ws.send(JSON.stringify(changeS))
 				}
 			}
 		}
