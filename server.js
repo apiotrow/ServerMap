@@ -31,45 +31,33 @@ const wss = new SocketServer({ server: httpserver })
 //count for squares
 let squaresGone = 0
 
-//initialize grid data
+//game screen size
 let gridW = 600
 let gridH = 600
-let gridD = 3
-let gridSHoriz = gridD
-let gridSVert = gridD
-let gridSGap = 0.5
-let grdSW = (gridW / gridSHoriz) - (gridSGap * 2)
-let grdSH = (gridH / gridSVert) - (gridSGap * 2)
+
+//initial grid data
+let gridD = 1
+let gridSGap = 1
+let gridSW = (gridW / gridD) - (gridSGap * 2)
+let gridSH = (gridH / gridD) - (gridSGap * 2)
+
+//grid information
 let grid = []
-for(let i = 0; i < gridSVert; i++){
-	let row = []
-	for(let j = 0; j < gridSHoriz; j++){
-		row.push(undefined)
-	}
-	grid.push(row)
-}
 
-let rowCount = 0
-let colCount
-for(let i = gridSGap; i < gridW; i += grdSW + (gridSGap * 2)){
-	colCount = 0
-	for(let j = gridSGap; j < gridH; j += grdSH + (gridSGap * 2)){
-		grid[rowCount][colCount] = [i, j, grdSW, grdSH, true]
-		colCount++
-	}
-	rowCount++
-}
+//initialize grid
+initializeGrid(gridD)
 
-//when a player logs in
+
 wss.on('connection', function connection(ws, req){
 
+	//when a player logs in, send them initial game data
 	let initData = {
 		header: "initData",
 		value: {
 			gridW: gridW,
 			gridH: gridH,
-			grdSW: grdSW,
-			grdSH: grdSH,
+			gridSW: gridSW,
+			gridSH: gridSH,
 			gridSGap: gridSGap,
 			grid: grid
 		}
@@ -81,7 +69,6 @@ wss.on('connection', function connection(ws, req){
 	//listeners
 	ws.on('message', function incoming(message){
 		let data = JSON.parse(message)
-
 		let header = data.header
 
 		//player requesting to change a square
@@ -95,28 +82,41 @@ wss.on('connection', function connection(ws, req){
 
 				//if all squares are gone, reset game
 				if(squaresGone == (gridD * gridD) - 1){
+					//reset squares gone counter
 					squaresGone = 0
-					for(let i = 0; i < grid.length; i++){
-						for(let j = 0; j < grid[i].length; j++){
-							grid[i][j][4] = true
+
+					//make grid 1 row/col larger than last
+					gridD++
+					gridSW = (gridW / gridD) - (gridSGap * 2)
+					gridSH = (gridH / gridD) - (gridSGap * 2)
+
+					//initialize new grid
+					initializeGrid(gridD)
+
+					//new grid data for players
+					let resetGame = {
+						header: "resetGame",
+						value: {
+							gridSW: gridSW,
+							gridSH: gridSH,
+							gridSGap: gridSGap,
+							grid: grid
 						}
 					}
 
-					let resetGame = {
-						header: "resetGame",
-						value: grid
-					}
-
+					//send all players new grid data
 					wss.clients.forEach((client) => {
 						sendMessage(client, JSON.stringify(resetGame))
 					})
+				//if game isn't over, just change square
 				}else{
-
+					//square to change
 					let changeS = {
 						header: "changeS",
 						value: data.value
 					}
 
+					//notify all players of changed square
 					wss.clients.forEach((client) => {
 						sendMessage(client, JSON.stringify(changeS))
 					})
@@ -144,6 +144,34 @@ function hasProp(obj, prop){
 		return false
 	}else if(typeof obj[prop] !== 'undefined'){
 		return true
+	}
+}
+
+//initialize grid data
+function initializeGrid(D){
+	//make sure grid is empty
+	grid = []
+
+	//create rows and columns
+	for(let i = 0; i < D; i++){
+		let row = []
+		for(let j = 0; j < D; j++){
+			row.push(undefined)
+		}
+		grid.push(row)
+	}
+
+	//set initial data for each square
+	//(upper-left X and Y coord, length, width, and if it's visible)
+	let rowCount = 0
+	let colCount
+	for(let i = gridSGap; i < gridW; i += gridSW + (gridSGap * 2)){
+		colCount = 0
+		for(let j = gridSGap; j < gridH; j += gridSH + (gridSGap * 2)){
+			grid[rowCount][colCount] = [i, j, gridSW, gridSH, true]
+			colCount++
+		}
+		rowCount++
 	}
 }
 

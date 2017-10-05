@@ -14,8 +14,8 @@ class Grid{
 		this.grid = initData.grid
 
 		//get grid data from server
-		let grdSW = initData.grdSW
-		let grdSH = initData.grdSH
+		let gridSW = initData.gridSW
+		let gridSH = initData.gridSH
 		let gridSGap = initData.gridSGap
 
 		//render grid
@@ -28,8 +28,8 @@ class Grid{
 		this.suppressClick = false //prevent click from deleting square
 		app.stage.interactive = true
 		app.stage.on('mousemove', (event)=>{
-			this.hoverX = Math.floor(event.data.global.x / (grdSW + (gridSGap * 2)))
-			this.hoverY = Math.floor(event.data.global.y / (grdSH + (gridSGap * 2)))
+			this.hoverX = Math.floor(event.data.global.x / (gridSW + (gridSGap * 2)))
+			this.hoverY = Math.floor(event.data.global.y / (gridSH + (gridSGap * 2)))
 		})
 		window.addEventListener('mousedown', (event)=>{
 			this.mouseDown = true
@@ -41,7 +41,7 @@ class Grid{
 			this.mouseDown = false
 		})
 
-		//init update loop
+		//start update loop
 		let callUpdate = ()=> {
 			this.update(gridGraphics, app)
 		}
@@ -55,20 +55,30 @@ class Grid{
 
 		    //change Sares that other players have changed
 			if(data.header == "resetGame"){
+				let resetData = data.value
+
 				//prevent square in new game from getting deleted
 				//by click that started in previous game
 				this.suppressClick = true
 
-				this.grid = data.value
+				//set grid information to new info
+				gridSW = resetData.gridSW
+				gridSH = resetData.gridSH
+				gridSGap = resetData.gridSGap
+				this.grid = resetData.grid
+
+				//render new grid
 				this.updateGrid(gridGraphics)
 			}
 
-		    //change Sares that other players have changed
+		    //change squares that other players have changed
 			if(data.header == "changeS"){
+				//set changed square
 				let gridX = data.value.gridX
 				let gridY = data.value.gridY
-
 				this.grid[gridX][gridY][4] = false
+
+				//render updated grid
 				this.updateGrid(gridGraphics)
 			}
 		})
@@ -81,18 +91,19 @@ class Grid{
 
 		for(let i = 0; i < this.grid.length; i++){
 			for(let j = 0; j < this.grid[i].length; j++){
-
+				//square for this iteration
 				let S = this.grid[i][j]
 
+				//if square isn't supposed to be rendered, skip it
 				if(S[4] == false)
 					continue
 
+				//render square
 				let x = S[0]
 				let y = S[1]
-				let grdSW = S[2]
-				let grdSH = S[3]
-
-				gridGraphics.drawRect(x, y, grdSW, grdSH)
+				let gridSW = S[2]
+				let gridSH = S[3]
+				gridGraphics.drawRect(x, y, gridSW, gridSH)
 			}
 		}
 
@@ -101,6 +112,7 @@ class Grid{
 			//drag-removing of squares
 			this.mouseDown = false
 			
+			//reset click suppressor
 			this.suppressClick = false
 		}
 	}
@@ -110,11 +122,15 @@ class Grid{
 		if(this.grid[this.hoverY] !== undefined 
 			&& this.grid[this.hoverY][this.hoverX] !== undefined)
 		{
+			//on mouse click, delete square
 			if(this.mouseDown){
+				//square being hovered over
 				let hoveredS = this.grid[this.hoverX][this.hoverY]
 
-				//let server know we changed a square
+				//let server know we changed a square.
+				//only attempt this if square isn't already deleted
 				if(hoveredS[4] == true){
+					//square to change
 					let changeS = {
 						header: "changeS",
 						value: {
@@ -122,6 +138,8 @@ class Grid{
 							gridY: this.hoverY
 						}
 					}
+
+					//notify server
 					this.ws.send(JSON.stringify(changeS))
 				}
 			}
