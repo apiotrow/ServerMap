@@ -1,14 +1,17 @@
 
 class Grid{
-	constructor(app, initData, ws){
+	//if app is undefined, it means it's a bot
+	constructor(initData, ws, app){
 		//websocket
 		this.ws = ws
 
-		//setup grid graphics
 		let gridGraphics
-		gridGraphics = new PIXI.Graphics()
-		gridGraphics.beginFill(0xFF3300)
-		app.stage.addChild(gridGraphics)
+		if(app !== undefined){
+			//setup grid graphics
+			gridGraphics = new PIXI.Graphics()
+			gridGraphics.beginFill(0xFF3300)
+			app.stage.addChild(gridGraphics)
+		}
 
 		//grid positions and on/off bools
 		this.grid = initData.grid
@@ -20,36 +23,38 @@ class Grid{
 		this.color = initData.color
 		this.virginColor = initData.virginColor
 
-		//render grid
-		this.updateGrid(gridGraphics)
+		if(app !== undefined){
+			//render grid
+			this.updateGrid(gridGraphics)
 
-		//setup inputs
-		this.hoverX = -1
-		this.hoverY = -1
-		this.mouseDown = false
-		this.suppressClick = false //prevent click from deleting square
-		app.stage.interactive = true
-		app.stage.on('mousemove', (event)=>{
-			this.hoverX = Math.floor(event.data.global.x / (gridSW + (gridSGap * 2)))
-			this.hoverY = Math.floor(event.data.global.y / (gridSH + (gridSGap * 2)))
-		})
-		window.addEventListener('mousedown', (event)=>{
-			this.mouseDown = true
-		})
-		window.addEventListener('mouseup', (event)=>{
+			//setup inputs
+			this.hoverX = -1
+			this.hoverY = -1
 			this.mouseDown = false
-		})
-		window.addEventListener('mouseupoutside', (event)=>{
-			this.mouseDown = false
-		})
+			this.suppressClick = false //prevent click from deleting square
+			app.stage.interactive = true
+			app.stage.on('mousemove', (event)=>{
+				this.hoverX = Math.floor(event.data.global.x / (gridSW + (gridSGap * 2)))
+				this.hoverY = Math.floor(event.data.global.y / (gridSH + (gridSGap * 2)))
+			})
+			window.addEventListener('mousedown', (event)=>{
+				this.mouseDown = true
+			})
+			window.addEventListener('mouseup', (event)=>{
+				this.mouseDown = false
+			})
+			window.addEventListener('mouseupoutside', (event)=>{
+				this.mouseDown = false
+			})
 
-		//start update loop
-		let callUpdate = ()=> {
-			this.update(gridGraphics, app)
+			//start update loop
+			let callUpdate = ()=> {
+				this.update(gridGraphics, app)
+			}
+			let ticker = PIXI.ticker.shared
+			ticker.add(callUpdate)
+			ticker.start()
 		}
-		let ticker = PIXI.ticker.shared
-		ticker.add(callUpdate)
-		ticker.start()
 
 		//websocket listeners
 		this.ws.addEventListener("message", (event)=> {
@@ -70,7 +75,9 @@ class Grid{
 				this.grid = resetData.grid
 
 				//render new grid
-				this.updateGrid(gridGraphics)
+				if(app !== undefined){
+					this.updateGrid(gridGraphics)
+				}
 			}
 
 		    //change squares that other players have changed
@@ -83,7 +90,9 @@ class Grid{
 				this.grid[gridX][gridY][4] = color
 
 				//render updated grid
-				this.updateGrid(gridGraphics)
+				if(app !== undefined){
+					this.updateGrid(gridGraphics)
+				}
 			}
 		})
 	}
@@ -142,7 +151,7 @@ class Grid{
 		}
 	}
 
-	update(gridGraphics, app){
+	update(gridGraphics){
 		//if mouse is over a square
 		if(this.grid[this.hoverY] !== undefined 
 			&& this.grid[this.hoverY][this.hoverX] !== undefined)

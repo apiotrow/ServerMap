@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
 			})
 			document.body.appendChild(app.view)
 
-			let game = new Grid(app, initData, this.ws)
+			let game = new Grid(initData, this.ws, app)
 		}
 	}
 
 	//bots
-	for(let i = 0; i < 1; i++){
+	for(let i = 0; i < 5; i++){
 		let bot = new Bot()
 	}
 })

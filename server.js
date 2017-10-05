@@ -36,8 +36,8 @@ let gridW = 600
 let gridH = 600
 
 //initial grid data
-let gridD = 3
-let gridSGap = 1
+let gridD = 25
+let gridSGap = 0
 let gridSW = (gridW / gridD) - (gridSGap * 2)
 let gridSH = (gridH / gridD) - (gridSGap * 2)
 //color of non-selected squares
@@ -50,7 +50,6 @@ let grid = []
 initializeGrid(gridD)
 
 wss.on('connection', function connection(ws, req){
-
 	//when a player logs in, send them initial game data
 	let initData = {
 		header: "initData",
