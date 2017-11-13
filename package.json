@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.2",
+    "fast-simplex-noise": "^3.2.0",
+    "pixi.js": "^4.6.0",
     "ws": "^3.2.0"
   },
   "optionalDependencies": {

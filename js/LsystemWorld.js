@@ -1,4 +1,5 @@
 let Lsystem = require('./Lsystem.js')
+let FastSimplexNoise = require('fast-simplex-noise')
 
 class LsystemWorld{
 	constructor(seed, rule, app){
@@ -21,6 +22,9 @@ class LsystemWorld{
 		let ticker = PIXI.ticker.shared
 		ticker.add(callUpdate)
 		ticker.start()
+
+		let noiseGen = new FastSimplexNoise({random: 2})
+		console.log(noiseGen)
 	}
 
 	getColor(col){
