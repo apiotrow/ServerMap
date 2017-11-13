@@ -36,7 +36,7 @@ let gridW = 600
 let gridH = 600
 
 //initial grid data
-let gridD = 25
+let gridD = 2
 let gridSGap = 0
 let gridSW = (gridW / gridD) - (gridSGap * 2)
 let gridSH = (gridH / gridD) - (gridSGap * 2)
