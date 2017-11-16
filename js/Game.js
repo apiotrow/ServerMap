@@ -30,7 +30,7 @@ class Game{
 		this.tileSize = 25
 
 		//width/height map needs to be to completely fill canvas
-		this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
+		this.gameTileD = this.worldToTile(this.app.renderer.width)
 
 		//random color for map
 		this.rand360 = Math.floor(Math.random() * 360)
@@ -48,13 +48,6 @@ class Game{
 		this.es.enableDiagonals()
 		this.es.disableCornerCutting()
 		this.es.setGrid(this.astarmap)
-
-		//player
-		this.player = {}
-		this.player.x = 0
-		this.player.y = 0
-
-		this.player.path = null
 
 		this.keyState = {}
 		window.addEventListener('keydown', (e)=>{
@@ -114,76 +107,111 @@ class Game{
 		ticker.add(callUpdate)
 		ticker.start()
 
-
 		this.max = 1
 		this.min = 1
 
+		//player
+		this.player = {}
+		this.player.x = 0
+		this.player.y = 0
+		this.player.path = null
 		this.player.pathIter = 1
-		this.pMoveInterval
-		this.player.moveSpeed = 150
-		// this.pMoveInterval = setInterval(()=>{
-		// 	if(this.player.path !== null){
-		// 		if(this.player.path[this.player.pathIter] !== undefined){
-		// 			this.player.x = (this.player.path[this.player.pathIter].x * this.tileSize) - this.mapContainer.x
-		// 			this.player.y = (this.player.path[this.player.pathIter].y * this.tileSize) - this.mapContainer.y
-		// 			this.player.pathIter++
-		// 		}else{
-		// 			this.player.pathIter = 1
-		// 			this.player.path = null
-		// 		}
-		// 	}
-		// }, 100)
+		this.player.pMoveInterval
+		this.player.moveSpeed = 200
+		this.player.moving = false
+		this.player.onSpot = true
+		this.player.chosenNextDest = []
 	}
 
 	paintSquare(terrain, x, y, w, h){
 		terrain.drawRect(x, y, w, h)
 	}
 
+	setPlayerPath(fromX, fromY, toX, toY){
+		if(this.playerInScreen()){
+			//make sure player is in screen
+	    	this.es.setGrid(this.astarmap)
+	        this.es.findPath(fromX, fromY, toX, toY, (path)=>{
+	        	this.player.pathIter = 1
+	        	this.player.path = path
+
+	        	clearInterval(this.player.pMoveInterval)
+	        	this.player.pMoveInterval = setInterval(()=>{
+					if(this.player.path !== null){
+						this.player.onSpot = true
+
+						this.player.moving = true
+
+						if(this.player.path[this.player.pathIter] !== undefined){
+							this.player.x = 
+							(this.player.path[this.player.pathIter].x * this.tileSize) 
+							- this.mapContainer.x
+
+							this.player.y = 
+							(this.player.path[this.player.pathIter].y * this.tileSize) 
+							- this.mapContainer.y
+
+							this.player.pathIter++
+						}else{
+							this.player.onSpot = true
+							this.player.moving = false
+							this.player.pathIter = 1
+							this.player.path = null
+							clearInterval(this.player.pMoveInterval)
+						}
+					}
+				}, this.player.moveSpeed)
+	        })
+
+	        this.es.calculate()
+	    }
+	}
+
+	playerInScreen(){
+		let playerTileX = this.worldToTile(this.player.x + this.mapContainer.x) 
+	    let playerTileY = this.worldToTile(this.player.y + this.mapContainer.y)
+
+	    if(playerTileX > -1 && playerTileY > -1 
+    	&& playerTileX < this.gameTileD
+    	&& playerTileY < this.gameTileD)
+    	{
+	    	return true
+	    }
+	    return false
+	}
+
+	worldToTile(world){
+		return Math.floor(world / this.tileSize)
+	}
+
+	screenToWorldX(screenX){
+		return screenX + this.mapContainer.x
+	}
+
+	screenToWorldY(screenY){
+		return screenY + this.mapContainer.y
+	}
+
 	update(terrain, simplex){
 		terrain.clear()
 
 		if(this.keyState["click"]){
+	        let destTileX = this.worldToTile(this.mousex)
+	        let destTileY = this.worldToTile(this.mousey)
 
-	        let destTileX = Math.floor(this.mousex / this.tileSize)
-	        let destTileY = Math.floor(this.mousey / this.tileSize)
+	        let playerTileX = this.worldToTile(this.screenToWorldX(this.player.x))
+	        let playerTileY = this.worldToTile(this.screenToWorldY(this.player.y))
 
-	        let playerTileX = Math.floor((this.player.x + this.mapContainer.x) / this.tileSize) 
-	        let playerTileY = Math.floor((this.player.y + this.mapContainer.y) / this.tileSize)
-
-	        //make sure player is in screen
-	        if(playerTileX > -1 && playerTileY > -1 
-	        	&& playerTileX < this.gameTileD
-	        	&& playerTileY < this.gameTileD)
-	        {
-	        	this.es.setGrid(this.astarmap)
-		        this.es.findPath(playerTileX, playerTileY, destTileX, destTileY, (path)=>{
-		        	this.player.pathIter = 1
-		        	this.player.path = path
-
-		        	clearInterval(this.pMoveInterval)
-		        	this.pMoveInterval = setInterval(()=>{
-						if(this.player.path !== null){
-							if(this.player.path[this.player.pathIter] !== undefined){
-								this.player.x = 
-								(this.player.path[this.player.pathIter].x * this.tileSize) 
-								- this.mapContainer.x
-
-								this.player.y = 
-								(this.player.path[this.player.pathIter].y * this.tileSize) 
-								- this.mapContainer.y
-
-								this.player.pathIter++
-							}else{
-								clearInterval(this.pMoveInterval)
-								this.player.pathIter = 1
-								this.player.path = null
-							}
-						}
-					}, this.player.moveSpeed)
-		        })
-		        this.es.calculate()
-	        }
-
+        	if(this.player.onSpot){
+        		this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
+        	}else{
+        		if(this.playerInScreen())
+	        	{
+			    	this.player.chosenNextDest.push(destTileX)
+			    	this.player.chosenNextDest.push(destTileY)
+			    }
+		    }
+	        
 		    this.keyState["click"] = false
 		}
 
@@ -297,6 +325,18 @@ class Game{
 			xIter++
 		}
 
+		if(this.player.onSpot == true && this.player.chosenNextDest.length > 0){
+			let destTileX = this.player.chosenNextDest[0]
+	        let destTileY = this.player.chosenNextDest[1]
+
+	        this.player.chosenNextDest = []
+
+	        let playerTileX = this.worldToTile(this.screenToWorldX(this.player.x))
+	        let playerTileY = this.worldToTile(this.screenToWorldY(this.player.y))
+
+	        this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
+		}
+
 		if(this.player.path !== null){
 			terrain.beginFill(0xffff66, 1)
 
@@ -305,27 +345,31 @@ class Game{
 
 			if(this.player.path[this.player.pathIter] !== undefined){
 
-				let step = this.tileSize / (this.player.moveSpeed / (1000 / 60))
+				this.player.onSpot = false
+
+				let stepSize = this.tileSize / (this.player.moveSpeed / (1000 / 60))
 
 				if(this.player.x < 
 					(this.player.path[this.player.pathIter].x * this.tileSize) 
 					- this.mapContainer.x){
-					this.player.x += step
+					this.player.x += stepSize
 				}else if(this.player.x > 
 					(this.player.path[this.player.pathIter].x * this.tileSize) 
 					- this.mapContainer.x){
-					this.player.x -= step
+					this.player.x -= stepSize
 				}
 
 				if(this.player.y < 
 					(this.player.path[this.player.pathIter].y * this.tileSize) 
 					- this.mapContainer.y){
-					this.player.y += step
+					this.player.y += stepSize
 				}else if(this.player.y > 
 					(this.player.path[this.player.pathIter].y * this.tileSize) 
 					- this.mapContainer.y){
-					this.player.y -= step
+					this.player.y -= stepSize
 				}
+
+
 
 				
 				// if(playerTileX < this.player.path[this.player.pathIter].x){
