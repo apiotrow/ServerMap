@@ -91,6 +91,9 @@ class Game{
 		this.mousey = 0
 		canvas.addEventListener
 		('mousemove', (evt)=>{
+			// this.mousex = evt.offsetX - this.mapContainer.x
+			// this.mousey = evt.offsetY - this.mapContainer.y
+
 			this.mousex = evt.offsetX
 			this.mousey = evt.offsetY
 		})
@@ -114,6 +117,30 @@ class Game{
 
 		this.max = 1
 		this.min = 1
+
+		this.player.pathIter = 1
+		this.pMoveInterval = setInterval(()=>{
+			if(this.player.path !== null){
+				// let finalDestX = (this.player.path[this.player.path.length - 1].x * this.tileSize) - this.mapContainer.x
+				// let finalDestY = (this.player.path[this.player.path.length - 1].y * this.tileSize) - this.mapContainer.y
+
+				
+
+				if(this.player.path[this.player.pathIter] !== undefined){
+					this.player.x = (this.player.path[this.player.pathIter].x * this.tileSize) - this.mapContainer.x
+					this.player.y = (this.player.path[this.player.pathIter].y * this.tileSize) - this.mapContainer.y
+					this.player.pathIter++
+				}else{
+					this.player.pathIter = 1
+					this.player.path = null
+				}
+
+				// for(let i = 0; i < this.player.path.length; i++){
+				// 	this.player.x = (this.player.path[i].x * this.tileSize) - this.mapContainer.x 
+				// 	this.player.y = (this.player.path[i].y * this.tileSize) - this.mapContainer.y
+				// }
+			}
+		}, 100)
 	}
 
 	paintSquare(terrain, x, y, w, h){
@@ -128,15 +155,23 @@ class Game{
 	        let destTileX = Math.floor(this.mousex / this.tileSize)
 	        let destTileY = Math.floor(this.mousey / this.tileSize)
 
-	        let playerTileX = Math.floor(this.player.x / this.tileSize)
-	        let playerTileY = Math.floor(this.player.y / this.tileSize)
+	        let playerTileX = Math.floor((this.player.x + this.mapContainer.x) / this.tileSize) 
+	        let playerTileY = Math.floor((this.player.y + this.mapContainer.y) / this.tileSize)
 
-	        this.es.setGrid(this.astarmap)
-	        this.es.findPath(playerTileX, playerTileY, destTileX, destTileY, (path)=>{
-	        	console.log(path)
-	        	this.player.path = path
-	        })
-	        this.es.calculate()
+	        //make sure player is in screen
+	        if(playerTileX > -1 && playerTileY > -1 
+	        	&& playerTileX < this.gameTileD
+	        	&& playerTileY < this.gameTileD)
+	        {
+	        	this.es.setGrid(this.astarmap)
+		        this.es.findPath(playerTileX, playerTileY, destTileX, destTileY, (path)=>{
+		        	this.player.pathIter = 1
+		        	this.player.path = path
+		        })
+		        this.es.calculate()
+	        }
+
+	        
 
 		    this.keyState["click"] = false
 		}
@@ -154,18 +189,42 @@ class Game{
 		if(this.keyState['w'] == true){
 			this.lastY -= 1
 			this.mapContainer.y += this.tileSize
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].y += 1
+				}
+			}
 		}
 		if(this.keyState['d'] == true){
 			this.lastX += 1
 			this.mapContainer.x -= this.tileSize
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].x -= 1
+				}
+			}
 		}
 		if(this.keyState['a'] == true){
 			this.lastX -= 1
 			this.mapContainer.x += this.tileSize
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].x += 1
+				}
+			}
 		}
 		if(this.keyState['s'] == true){
 			this.lastY += 1
 			this.mapContainer.y -= this.tileSize
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].y -= 1
+				}
+			}
 		}
 
 		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
@@ -224,6 +283,19 @@ class Game{
 			xIter++
 		}
 
+		// if(this.player.path !== null){
+		// 	terrain.beginFill(0xffff66, 1)
+
+		// 	for(let i = 0; i < this.player.path.length; i++){
+		// 		this.paintSquare(terrain, 
+		// 			(this.player.path[i].x * this.tileSize) - this.mapContainer.x, 
+		// 			(this.player.path[i].y * this.tileSize) - this.mapContainer.y, 
+		// 			this.tileSize, 
+		// 			this.tileSize)
+		// 	}
+			
+		// }
+
 		//render player
 		terrain.beginFill(0xffffff, 1)
 		this.paintSquare(terrain, 
@@ -232,18 +304,7 @@ class Game{
 			this.tileSize, 
 			this.tileSize)
 
-		if(this.player.path !== null){
-			terrain.beginFill(0xffff66, 1)
-
-			for(let i = 0; i < this.player.path.length; i++){
-				this.paintSquare(terrain, 
-					this.player.path[i].x * this.tileSize, 
-					this.player.path[i].y * this.tileSize, 
-					this.tileSize, 
-					this.tileSize)
-			}
-			
-		}
+		
 	}
 }
 
