@@ -3,7 +3,7 @@ let Bot = require('./Bot.js')
 
 let Lsystem = require('./Lsystem.js')
 let LsystemRules = require('./LsystemRules.js')
-let LsystemWorld = require('./LsystemWorld.js')
+let Game = require('./Game.js')
 
 //for development. causes changes to server.js to reload browser
 let server
@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', function () {
 	// }
 
 	//bots
-	for(let i = 0; i < 1; i++){
-		let bot = new Bot()
-	}
+	// for(let i = 0; i < 1; i++){
+	// 	let bot = new Bot()
+	// }
 
 
-	let app = new PIXI.Application(500, 500, 
+	let app = new PIXI.Application(800, 600, 
 		{
 			antialias: false, 
 			// forceCanvas: true,
@@ -54,5 +54,5 @@ document.addEventListener('DOMContentLoaded', function () {
 		})
 		document.body.appendChild(app.view)
 
-	let lsys = new LsystemWorld("a", "one", app)
+	let game = new Game("a", "one", app, gameView)
 })

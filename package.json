@@ -9,10 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "color-convert": "^1.9.1",
+    "easystarjs": "^0.4.1",
     "express": "^4.16.2",
     "pixi.js": "^4.6.0",
-    "proc-noise": "0.0.1",
     "simplex-noise": "^2.3.0",
+    "webworkify": "^1.5.0",
     "ws": "^3.2.0"
   },
   "optionalDependencies": {
