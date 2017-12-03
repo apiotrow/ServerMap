@@ -4,6 +4,7 @@ let Bot = require('./Bot.js')
 let Lsystem = require('./Lsystem.js')
 let LsystemRules = require('./LsystemRules.js')
 let Game = require('./Game.js')
+let Game3D = require('./Game3D.js')
 
 //for development. causes changes to server.js to reload browser
 let server
@@ -13,6 +14,7 @@ if(isNode())
 
 document.addEventListener('DOMContentLoaded', function () {
 	let PIXI = require('pixi.js')
+	let BABYLON = require('babylonjs')
 
 	PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST //makes text sharper
 	let gameView = document.getElementById('game')
@@ -45,14 +47,30 @@ document.addEventListener('DOMContentLoaded', function () {
 	// }
 
 
-	let app = new PIXI.Application(600, 600, 
-		{
-			antialias: false, 
-			// forceCanvas: true,
-			backgroundColor : 0x000000,
-			view: gameView
-		})
-		document.body.appendChild(app.view)
+	// let app = new PIXI.Application(600, 600, 
+	// 	{
+	// 		antialias: false, 
+	// 		// forceCanvas: true,
+	// 		backgroundColor : 0x000000,
+	// 		view: gameView
+	// 	})
+	// 	document.body.appendChild(app.view)
 
-	let game = new Game("a", "one", app, gameView)
+	// let game = new Game("a", "one", app, gameView)
+
+
+
+
+
+	let appH = 600
+	let appW = 600
+	let canvas = document.getElementById("game")
+	canvas.style.width = appW + "px"
+	canvas.style.height = appH + "px"
+	let engine = new BABYLON.Engine(canvas, true)
+	engine.enableOfflineSupport = false //prevent babylon.manifest error
+	let scene = new BABYLON.Scene(engine)
+	let gameInstance = new Game3D(
+ 		engine, canvas, scene,
+ 		appW, appH)
 })

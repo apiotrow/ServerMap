@@ -27,7 +27,7 @@ class Game{
 		this.lastY = 0
 
 		//size of each square
-		this.tileSize = 12
+		this.tileSize = 5
 
 		//width/height map needs to be to completely fill canvas
 		this.gameTileD = this.worldToTile(this.app.renderer.width)
@@ -42,7 +42,9 @@ class Game{
 			for(let y = 0; y < this.gameTileD; y++){
 				aStarMapCol.push(0)
 			}
+
 			this.astarmap.push(aStarMapCol)
+
 		}
 		this.es = new easystarjs.js()
 		this.es.setAcceptableTiles(1)
@@ -307,7 +309,7 @@ class Game{
 
 		
 		this.cameraKeyboardControls()
-		// this.keepPlayerWithinScreenBoundaries()
+		this.keepPlayerWithinScreenBoundaries()
 		// this.centerCamOnPlayer()
 
 		if(this.rand360 <= 0){
@@ -322,8 +324,8 @@ class Game{
 		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
 		terrain.beginFill(col, 1)
 
-		this.max -= .001
-		this.min += .001
+		// this.max -= .001
+		// this.min += .001
 
 		let divisor2 = this.divisor2 / this.max
 		let divisor3 = this.divisor3 / this.min
