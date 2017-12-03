@@ -96,9 +96,14 @@ class Game{
 
 		// let simplex = new SimplexNoise(Math.random)
 		let simplex = new SimplexNoise(()=>{return 0.46})
-		this.divisor2 = Math.random() * 10 
-		this.divisor3 = Math.random() * 100 
-		this.divisor4 = Math.random() * 900
+
+		// this.divisor2 = Math.random() * 10 
+		// this.divisor3 = Math.random() * 100 
+		// this.divisor4 = Math.random() * 900
+
+		this.divisor2 = 1 
+		this.divisor3 = 1 
+		this.divisor4 = 1
 
 		this.blah = {
 			yes(){
@@ -274,8 +279,46 @@ class Game{
 		}
 	}
 
+	editDivisors(){
+		let changed = false
+
+		if(this.keyState['z'] == true){
+			this.divisor2 *= 1.01
+			changed = true
+		}
+		if(this.keyState['x'] == true){
+			this.divisor2 /= 1.01
+			changed = true
+		}
+
+		if(this.keyState['c'] == true){
+			this.divisor3 *= 1.01
+			changed = true
+		}
+		if(this.keyState['v'] == true){
+			this.divisor3 /= 1.01
+			changed = true
+		}
+
+		if(this.keyState['b'] == true){
+			this.divisor4 *= 1.01
+			changed = true
+		}
+		if(this.keyState['n'] == true){
+			this.divisor4 /= 1.01
+			changed = true
+		}
+
+		if(changed){
+			console.log("divisor2: " + this.divisor2 + ", divisor3: " + this.divisor3
+				+ ", divisor4: " + this.divisor4)
+		}
+	}
+
 	update(terrain, simplex){
 		terrain.clear()
+
+		this.editDivisors()
 
 		if(this.keyState["click"]){
 	        let destTileX = this.worldToTile(this.mousex)
@@ -309,7 +352,7 @@ class Game{
 
 		
 		this.cameraKeyboardControls()
-		this.keepPlayerWithinScreenBoundaries()
+		// this.keepPlayerWithinScreenBoundaries()
 		// this.centerCamOnPlayer()
 
 		if(this.rand360 <= 0){

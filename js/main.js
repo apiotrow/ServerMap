@@ -19,6 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
 	PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST //makes text sharper
 	let gameView = document.getElementById('game')
 
+
+
+
+
+
 	// this.ws = new WebSocket("ws://127.0.0.1:5000/")
 	// this.ws.onmessage = (event)=> {
 	// 	let data = JSON.parse(event.data)
@@ -47,30 +52,38 @@ document.addEventListener('DOMContentLoaded', function () {
 	// }
 
 
-	// let app = new PIXI.Application(600, 600, 
-	// 	{
-	// 		antialias: false, 
-	// 		// forceCanvas: true,
-	// 		backgroundColor : 0x000000,
-	// 		view: gameView
-	// 	})
-	// 	document.body.appendChild(app.view)
-
-	// let game = new Game("a", "one", app, gameView)
 
 
 
 
 
-	let appH = 600
-	let appW = 600
-	let canvas = document.getElementById("game")
-	canvas.style.width = appW + "px"
-	canvas.style.height = appH + "px"
-	let engine = new BABYLON.Engine(canvas, true)
-	engine.enableOfflineSupport = false //prevent babylon.manifest error
-	let scene = new BABYLON.Scene(engine)
-	let gameInstance = new Game3D(
- 		engine, canvas, scene,
- 		appW, appH)
+	let app = new PIXI.Application(600, 600, 
+		{
+			antialias: false, 
+			// forceCanvas: true,
+			backgroundColor : 0x000000,
+			view: gameView
+		})
+		document.body.appendChild(app.view)
+
+	let game = new Game("a", "one", app, gameView)
+
+
+
+
+
+
+
+
+	// let appH = 600
+	// let appW = 600
+	// let canvas = document.getElementById("game")
+	// canvas.style.width = appW + "px"
+	// canvas.style.height = appH + "px"
+	// let engine = new BABYLON.Engine(canvas, true)
+	// engine.enableOfflineSupport = false //prevent babylon.manifest error
+	// let scene = new BABYLON.Scene(engine)
+	// let gameInstance = new Game3D(
+ // 		engine, canvas, scene,
+ // 		appW, appH)
 })
