@@ -105,6 +105,8 @@ class Game{
 		this.divisor3 = 1 
 		this.divisor4 = 1
 
+		this.threshold = 0.2
+
 		this.blah = {
 			yes(){
 				console.log("okay")
@@ -282,30 +284,39 @@ class Game{
 	editDivisors(){
 		let changed = false
 
-		if(this.keyState['z'] == true){
+		if(this.keyState['r'] == true){
 			this.divisor2 *= 1.01
 			changed = true
 		}
-		if(this.keyState['x'] == true){
+		if(this.keyState['f'] == true){
 			this.divisor2 /= 1.01
 			changed = true
 		}
 
-		if(this.keyState['c'] == true){
+		if(this.keyState['t'] == true){
 			this.divisor3 *= 1.01
 			changed = true
 		}
-		if(this.keyState['v'] == true){
+		if(this.keyState['g'] == true){
 			this.divisor3 /= 1.01
 			changed = true
 		}
 
-		if(this.keyState['b'] == true){
+		if(this.keyState['y'] == true){
 			this.divisor4 *= 1.01
 			changed = true
 		}
-		if(this.keyState['n'] == true){
+		if(this.keyState['h'] == true){
 			this.divisor4 /= 1.01
+			changed = true
+		}
+
+		if(this.keyState['z'] == true){
+			this.threshold *= 1.01
+			changed = true
+		}
+		if(this.keyState['x'] == true){
+			this.threshold /= 1.01
 			changed = true
 		}
 
@@ -410,7 +421,7 @@ class Game{
 				// let col = "0x" + colorconvert.hsl.hex(s * this.rand360, 100, 50)
 				// terrain.beginFill(col, 1)
 
-				if(s < .4){
+				if(s < this.threshold){
 					this.paintSquare(terrain, 
 						x * this.tileSize, 
 						y * this.tileSize, 
