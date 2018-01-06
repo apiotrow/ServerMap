@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	// 	}
 	// }
 
-	//bots
+	// // bots
 	// for(let i = 0; i < 1; i++){
 	// 	let bot = new Bot()
 	// }
@@ -57,33 +57,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-	// let app = new PIXI.Application(600, 600, 
-	// 	{
-	// 		antialias: false, 
-	// 		// forceCanvas: true,
-	// 		backgroundColor : 0x000000,
-	// 		view: gameView
-	// 	})
-	// 	document.body.appendChild(app.view)
+	let app = new PIXI.Application(600, 600, 
+		{
+			antialias: false, 
+			// forceCanvas: true,
+			backgroundColor : 0x000000,
+			view: gameView
+		})
+		document.body.appendChild(app.view)
 
-	// let game = new Game("a", "one", app, gameView)
-
-
+	let game = new Game("a", "one", app, gameView)
 
 
 
 
 
 
-	let appH = 600
-	let appW = 600
-	let canvas = document.getElementById("game")
-	canvas.style.width = appW + "px"
-	canvas.style.height = appH + "px"
-	let engine = new BABYLON.Engine(canvas, true)
-	engine.enableOfflineSupport = false //prevent babylon.manifest error
-	let scene = new BABYLON.Scene(engine)
-	let gameInstance = new Game3D(
- 		engine, canvas, scene,
- 		appW, appH)
+
+
+// 	let appH = 600
+// 	let appW = 600
+// 	let canvas = document.getElementById("game")
+// 	canvas.style.width = appW + "px"
+// 	canvas.style.height = appH + "px"
+// 	let engine = new BABYLON.Engine(canvas, true)
+// 	engine.enableOfflineSupport = false //prevent babylon.manifest error
+// 	let scene = new BABYLON.Scene(engine)
+// 	let gameInstance = new Game3D(
+//  		engine, canvas, scene,
+//  		appW, appH)
 })

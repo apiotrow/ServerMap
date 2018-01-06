@@ -27,7 +27,7 @@ class Game{
 		this.lastY = 0
 
 		//size of each square
-		this.tileSize = 5
+		this.tileSize = 10
 
 		//width/height map needs to be to completely fill canvas
 		this.gameTileD = this.worldToTile(this.app.renderer.width)
@@ -101,11 +101,9 @@ class Game{
 		// this.divisor3 = Math.random() * 100 
 		// this.divisor4 = Math.random() * 900
 
-		this.divisor2 = 1 
-		this.divisor3 = 1 
-		this.divisor4 = 1
+		this.divisor = 36 
 
-		this.threshold = 0.2
+		this.threshold = -.15
 
 		this.blah = {
 			yes(){
@@ -129,7 +127,7 @@ class Game{
 		ticker.add(callUpdate)
 		ticker.start()
 
-		this.max = 1
+		this.max = 0.1
 		this.min = 1
 
 		//player
@@ -285,45 +283,94 @@ class Game{
 		let changed = false
 
 		if(this.keyState['r'] == true){
-			this.divisor2 *= 1.01
+			this.divisor *= 1.01
 			changed = true
 		}
 		if(this.keyState['f'] == true){
-			this.divisor2 /= 1.01
-			changed = true
-		}
-
-		if(this.keyState['t'] == true){
-			this.divisor3 *= 1.01
-			changed = true
-		}
-		if(this.keyState['g'] == true){
-			this.divisor3 /= 1.01
-			changed = true
-		}
-
-		if(this.keyState['y'] == true){
-			this.divisor4 *= 1.01
-			changed = true
-		}
-		if(this.keyState['h'] == true){
-			this.divisor4 /= 1.01
-			changed = true
-		}
-
-		if(this.keyState['z'] == true){
-			this.threshold *= 1.01
-			changed = true
-		}
-		if(this.keyState['x'] == true){
-			this.threshold /= 1.01
+			this.divisor /= 1.01
 			changed = true
 		}
 
 		if(changed){
-			console.log("divisor2: " + this.divisor2 + ", divisor3: " + this.divisor3
-				+ ", divisor4: " + this.divisor4)
+			console.log("divisor: " + this.divisor)
 		}
+	}
+
+	findSections(squares){
+		let sections = new Set()
+
+		for(let x in squares){
+			for(let y in squares){
+				this.checkAround(new Set(), x, y, squares)
+			}
+		}
+	}
+
+	checkAround(sections, x, y, squares){
+		if(this.pointConnected(x - 1, y - 1, squares)){
+			sections.add(x - 1, y - 1)
+		}
+		if(this.pointConnected(x, y - 1, squares)){
+			sections.add(x, y - 1)
+		}
+		if(this.pointConnected(x + 1, y - 1, squares)){
+			sections.add(x + 1, y - 1)
+		}
+		if(this.pointConnected(x - 1, y, squares)){
+			sections.add(x - 1, y)
+		}
+		if(this.pointConnected(x + 1, y, squares)){
+			sections.add(x + 1, y)
+		}
+		if(this.pointConnected(x - 1, y + 1, squares)){
+			sections.add(x - 1, y + 1)
+		}
+		if(this.pointConnected(x, y + 1, squares)){
+			sections.add(x, y + 1)
+		}
+		if(this.pointConnected(x + 1, y + 1, squares)){
+			sections.add(x + 1, y + 1)
+		}
+	}
+
+	neighborCount(x, y, squares){
+		let count = 0
+
+		if(this.pointConnected(x - 1, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x - 1, y, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y, squares)){
+			count++
+		}
+		if(this.pointConnected(x - 1, y + 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x, y + 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y + 1, squares)){
+			count++
+		}
+
+		return count
+	}
+
+	pointConnected(x, y, squares){
+		if(squares[x] !== undefined){
+			if(squares[x][y] !== undefined){
+				return true
+			}
+		}
+		return false
 	}
 
 	update(terrain, simplex){
@@ -378,55 +425,49 @@ class Game{
 		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
 		terrain.beginFill(col, 1)
 
-		// this.max -= .001
-		// this.min += .001
+		// this.max += .01
+		// this.min += .01
 
-		let divisor2 = this.divisor2 / this.max
-		let divisor3 = this.divisor3 / this.min
-		let divisor4 = this.divisor4 / this.max
-
-		//render map
+		//get map info
 		let xIter = 0
 		let yIter = 0
+		let squares = {}
 		for(let x = this.lastX; x < this.gameTileD + this.lastX; x++){
 			yIter = 0
 			for(let y = this.lastY; y < this.gameTileD + this.lastY; y++){
-				let noise1 = simplex.noise2D(
-					x, 
-					y)
-				
+				let noise = simplex.noise2D(
+					x / (this.divisor / 1), 
+					y / (this.divisor / 1))
+
 				let noise2 = simplex.noise2D(
-					(x / divisor2), 
-					(y / divisor2))
+					x / (this.divisor / 3), 
+					y / (this.divisor / 3))
 
-				let noise3 = simplex.noise2D(
-					(x / divisor3), 
-					(y / divisor3))
+				noise = (noise + (noise2)) / 2
 
-				let noise4 = simplex.noise2D(
-					(x / divisor4), 
-					(y / divisor4))
+				// let mult = 3
+				// let multIter = mult
+				// let res = 0
+				// while(multIter > 0){
+				// 	res += noise / multIter
+				// 	multIter--
+				// }
+				// noise = res / mult
 
-				noise1 += 1
-				noise2 += 1
-				noise3 += 1
-				noise4 += 1
-
-				let noise = noise1 + noise2 + noise3 + noise4
-
-				let s = noise / 8
 
 				// let u = ((this.gameTileD + this.lastX) - this.lastX) / x
 				// let col = "0x" + colorconvert.hsl.hex(u * 6, u * 100, u * 50)
 				// let col = "0x" + colorconvert.hsl.hex(s * this.rand360, 100, 50)
 				// terrain.beginFill(col, 1)
 
-				if(s < this.threshold){
-					this.paintSquare(terrain, 
-						x * this.tileSize, 
-						y * this.tileSize, 
-						this.tileSize, 
-						this.tileSize)
+				if(noise < this.threshold){
+					if(squares[x] === undefined){
+						squares[x] = {}
+					}
+					if(squares[x][y] === undefined){
+						squares[x][y] = 0
+					}
+
 					this.astarmap[yIter][xIter] = 0
 				}else{
 					this.astarmap[yIter][xIter] = 1
@@ -435,6 +476,30 @@ class Game{
 			}
 			xIter++
 		}
+
+		terrain.beginFill(col, 1)
+		for(let x = this.lastX; x < this.gameTileD + this.lastX; x++){
+			for(let y = this.lastY; y < this.gameTileD + this.lastY; y++){
+				if(squares[x] !== undefined){
+					if(squares[x][y] !== undefined){
+
+						// if(this.neighborCount(x, y, squares) < 7){
+						// 	terrain.beginFill(0x000000, 1)
+						// }else{
+							// terrain.beginFill(col, 1)
+						// }
+
+						this.paintSquare(terrain, 
+							x * this.tileSize, 
+							y * this.tileSize, 
+							this.tileSize, 
+							this.tileSize)
+					}
+				}
+			}
+		}
+
+		this.findSections(squares)
 
 		//change player destination
 		if(this.player.onSpot == true && this.player.chosenNextDest.length > 0){
@@ -494,8 +559,6 @@ class Game{
 			this.player.y, 
 			this.tileSize, 
 			this.tileSize)
-
-		
 	}
 }
 
