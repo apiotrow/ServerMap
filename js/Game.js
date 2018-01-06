@@ -20,14 +20,10 @@ class Game{
 		// this.mapContainer.x += this.app.renderer.width / 2
 		// this.mapContainer.y += this.app.renderer.height / 2
 
-		//x position of map from last frame
-		this.lastX = 0
-
-		//y position of map from last frame
-		this.lastY = 0
-
 		//size of each square
 		this.tileSize = 10
+
+		this.camSpeed = 4
 
 		//width/height map needs to be to completely fill canvas
 		this.gameTileD = this.worldToTile(this.app.renderer.width)
@@ -136,7 +132,7 @@ class Game{
 		this.player.y = 0
 		this.player.path = null
 		this.player.pathIter = 1
-		this.player.pMoveInterval
+		this.player.moveInterval
 		this.player.moveSpeed = 110
 		this.player.moving = false
 		this.player.onSpot = true
@@ -155,8 +151,8 @@ class Game{
 	        	this.player.pathIter = 1
 	        	this.player.path = path
 
-	        	clearInterval(this.player.pMoveInterval)
-	        	this.player.pMoveInterval = setInterval(()=>{
+	        	clearInterval(this.player.moveInterval)
+	        	this.player.moveInterval = setInterval(()=>{
 					if(this.player.path !== null){
 						this.player.onSpot = true
 
@@ -177,7 +173,7 @@ class Game{
 							this.player.moving = false
 							this.player.pathIter = 1
 							this.player.path = null
-							clearInterval(this.player.pMoveInterval)
+							clearInterval(this.player.moveInterval)
 						}
 					}
 				}, this.player.moveSpeed)
@@ -213,8 +209,8 @@ class Game{
 	}
 
 	moveCamY(amt){
-		this.lastY -= amt
-		this.mapContainer.y += this.tileSize * amt
+		this.mapContainer.y += amt
+		// this.mapContainer.y += this.tileSize * amt
 
 		if(this.player.path !== null){
 			for(let i = 0; i < this.player.path.length; i++){
@@ -224,8 +220,8 @@ class Game{
 	}
 
 	moveCamX(amt){
-		this.lastX -= amt
-		this.mapContainer.x += this.tileSize * amt
+		this.mapContainer.x += amt
+		// this.mapContainer.x += this.tileSize * amt
 
 		if(this.player.path !== null){
 			for(let i = 0; i < this.player.path.length; i++){
@@ -266,16 +262,16 @@ class Game{
 
 	cameraKeyboardControls(){
 		if(this.keyState['w'] == true){
-			this.moveCamY(1)
+			this.moveCamY(this.camSpeed)
 		}
 		if(this.keyState['s'] == true){
-			this.moveCamY(-1)
+			this.moveCamY(-this.camSpeed)
 		}
 		if(this.keyState['d'] == true){
-			this.moveCamX(-1)
+			this.moveCamX(-this.camSpeed)
 		}
 		if(this.keyState['a'] == true){
-			this.moveCamX(1)
+			this.moveCamX(this.camSpeed)
 		}
 	}
 
@@ -378,36 +374,6 @@ class Game{
 
 		this.editDivisors()
 
-		if(this.keyState["click"]){
-	        let destTileX = this.worldToTile(this.mousex)
-	        let destTileY = this.worldToTile(this.mousey)
-
-	        let playerTileX = this.worldToTile(this.screenToWorldX(this.player.x))
-	        let playerTileY = this.worldToTile(this.screenToWorldY(this.player.y))
-
-        	if(!this.player.moving){
-        		this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
-        	}else{
-        		if(this.playerInScreen())
-	        	{
-			    	this.player.chosenNextDest.push(destTileX)
-			    	this.player.chosenNextDest.push(destTileY)
-			    }
-		    }
-	        
-		    this.keyState["click"] = false
-		}
-
-		if(this.keyState['zoomIn']){
-			// this.tileSize += 1
-			// this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
-			this.keyState['zoomIn'] = false
-		}else if (this.keyState['zoomOut']){
-			// this.tileSize -= 1
-			// this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
-			this.keyState['zoomOut'] = false
-		}
-
 		
 		this.cameraKeyboardControls()
 		// this.keepPlayerWithinScreenBoundaries()
@@ -432,9 +398,21 @@ class Game{
 		let xIter = 0
 		let yIter = 0
 		let squares = {}
-		for(let x = this.lastX; x < this.gameTileD + this.lastX; x++){
+
+		let mapY = Math.floor(-this.mapContainer.y  / this.tileSize)
+		let mapX = Math.floor(-this.mapContainer.x  / this.tileSize)
+
+		for(
+			let x = mapX; 
+			x < this.gameTileD + mapX; 
+			x++)
+		{
 			yIter = 0
-			for(let y = this.lastY; y < this.gameTileD + this.lastY; y++){
+			for(
+				let y = mapY; 
+				y < this.gameTileD + mapY; 
+				y++)
+			{
 				let noise = simplex.noise2D(
 					x / (this.divisor / 1), 
 					y / (this.divisor / 1))
@@ -478,8 +456,16 @@ class Game{
 		}
 
 		terrain.beginFill(col, 1)
-		for(let x = this.lastX; x < this.gameTileD + this.lastX; x++){
-			for(let y = this.lastY; y < this.gameTileD + this.lastY; y++){
+		for(
+			let x = mapX; 
+			x < this.gameTileD + mapX; 
+			x++)
+		{
+			for(
+				let y = mapY; 
+				y < this.gameTileD + mapY; 
+				y++)
+			{
 				if(squares[x] !== undefined){
 					if(squares[x][y] !== undefined){
 
@@ -497,6 +483,36 @@ class Game{
 					}
 				}
 			}
+		}
+
+		if(this.keyState["click"]){
+	        let destTileX = this.worldToTile(this.mousex)
+	        let destTileY = this.worldToTile(this.mousey)
+
+	        let playerTileX = this.worldToTile(this.screenToWorldX(this.player.x))
+	        let playerTileY = this.worldToTile(this.screenToWorldY(this.player.y))
+
+        	if(!this.player.moving){
+        		this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
+        	}else{
+        		if(this.playerInScreen())
+	        	{
+			    	this.player.chosenNextDest.push(destTileX)
+			    	this.player.chosenNextDest.push(destTileY)
+			    }
+		    }
+	        
+		    this.keyState["click"] = false
+		}
+
+		if(this.keyState['zoomIn']){
+			// this.tileSize += 1
+			// this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
+			this.keyState['zoomIn'] = false
+		}else if (this.keyState['zoomOut']){
+			// this.tileSize -= 1
+			// this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
+			this.keyState['zoomOut'] = false
 		}
 
 		this.findSections(squares)
