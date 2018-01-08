@@ -12,16 +12,15 @@ class Game{
 		this.app = app
 
 		this.mapContainer = new PIXI.Container()
-		this.app.stage.addChild(this.mapContainer)
+		// this.app.stage.addChild(this.mapContainer)
 		this.mapContainer.addChild(this.terrain)
 
-		//center map so we zoom into center instead of
-		//upper left corner
-		// this.mapContainer.x += this.app.renderer.width / 2
-		// this.mapContainer.y += this.app.renderer.height / 2
+		this.camContainer  = new PIXI.Container()
+		this.app.stage.addChild(this.camContainer)
+		this.camContainer.addChild(this.mapContainer)
 
 		//size of each square
-		this.tileSize = 30
+		this.tileSize = 10
 
 		//camera pan speed
 		this.camSpeed = 2
@@ -82,19 +81,12 @@ class Game{
 		this.mousey = 0
 		canvas.addEventListener
 		('mousemove', (evt)=>{
-			// this.mousex = evt.offsetX - this.mapContainer.x
-			// this.mousey = evt.offsetY - this.mapContainer.y
-
 			this.mousex = evt.offsetX
 			this.mousey = evt.offsetY
 		})
 
 		// this.simplex = new SimplexNoise(Math.random)
-		this.simplex = new SimplexNoise(()=>{return 0.46})
-
-		// this.divisor2 = Math.random() * 10 
-		// this.divisor3 = Math.random() * 100 
-		// this.divisor4 = Math.random() * 900
+		this.simplex = new SimplexNoise(()=>{return 0.41})
 
 		this.divisor = 36 
 
@@ -113,9 +105,6 @@ class Game{
 		ticker.add(callUpdate)
 		ticker.start()
 
-		this.max = 0.1
-		this.min = 1
-
 		//player
 		this.player = {}
 		this.player.x = 0
@@ -123,7 +112,7 @@ class Game{
 		this.player.path = null
 		this.player.pathIter = 1
 		this.player.moveInterval
-		this.player.moveSpeed = 90
+		this.player.moveSpeed = 100
 		this.player.moving = false
 		this.player.onSpot = true
 		this.player.chosenNextDest = []
@@ -148,9 +137,6 @@ class Game{
 
 						this.player.path[i].x = 
 						(this.player.path[i].x * this.tileSize) - this.mapContainer.x
-
-						this.player.path[i].x += (this.mapContainer.x % this.tileSize)
-						this.player.path[i].y += (this.mapContainer.y % this.tileSize)
 					}
 				}
 
@@ -216,33 +202,15 @@ class Game{
 	}
 
 	moveCamY(amt){
-		this.mapContainer.y += amt
+		// this.mapContainer.y -= amt
 
-		if(this.player.path !== null){
-			for(let i = 0; i < this.player.path.length; i++){
-					this.player.path[i].y += (this.mapContainer.y % this.tileSize)
-				}
-
-			// for(let i = 0; i < this.player.path.length; i++){
-			// 	this.player.path[i].y += (amt / this.tileSize)
-			// }
-		}
+		this.camContainer.y += amt
 	}
 
 	moveCamX(amt){
-		this.mapContainer.x += amt
+		// this.mapContainer.x -= amt
 
-		console.log(this.mapContainer.x % this.tileSize)
-
-		if(this.player.path !== null){
-			for(let i = 0; i < this.player.path.length; i++){
-					this.player.path[i].x += (this.mapContainer.x % this.tileSize)
-				}
-
-			// for(let i = 0; i < this.player.path.length; i++){
-			// 	this.player.path[i].x += amt / this.tileSize
-			// }
-		}
+		this.camContainer.x += amt
 	}
 
 	keepPlayerWithinScreenBoundaries(){
@@ -261,18 +229,8 @@ class Game{
 	}
 
 	centerCamOnPlayer(){
-		if(this.worldToTile(this.screenToWorldX(this.player.x)) < (this.gameTileD / 2)){
-			this.moveCamX(1)
-		}
-		if(this.worldToTile(this.screenToWorldX(this.player.x)) > (this.gameTileD / 2)){
-			this.moveCamX(-1)
-		}
-		if(this.worldToTile(this.screenToWorldY(this.player.y)) >(this.gameTileD / 2)){
-			this.moveCamY(-1)
-		}
-		if(this.worldToTile(this.screenToWorldY(this.player.y)) < (this.gameTileD / 2)){
-			this.moveCamY(1)
-		}
+		this.camContainer.x = -this.player.x + (this.app.renderer.width / 2)
+		this.camContainer.y = -this.player.y + (this.app.renderer.height / 2)
 	}
 
 	cameraKeyboardControls(){
@@ -304,16 +262,6 @@ class Game{
 
 		if(changed){
 			console.log("divisor: " + this.divisor)
-		}
-	}
-
-	findSections(squares){
-		let sections = new Set()
-
-		for(let x in squares){
-			for(let y in squares){
-				this.checkAround(new Set(), x, y, squares)
-			}
 		}
 	}
 
@@ -388,10 +336,38 @@ class Game{
 		this.terrain.clear()
 
 		this.editDivisors()
+
+		//move player
+		if(this.player.path !== null){
+			this.terrain.beginFill(0xffff66, 1)
+
+			if(this.player.path[this.player.pathIter] !== undefined){
+
+				this.player.onSpot = false
+
+				let stepSize = this.tileSize / (this.player.moveSpeed / (1000 / 60))
+			
+				if(this.player.x < this.playerDestX())
+				{
+					this.player.x += stepSize
+				}else if(this.player.x > this.playerDestX())
+				{
+					this.player.x -= stepSize
+				}
+
+				if(this.player.y < this.playerDestY())
+				{
+					this.player.y += stepSize
+				}else if(this.player.y > this.playerDestY())
+				{
+					this.player.y -= stepSize
+				}
+			}
+		}
 		
 		this.cameraKeyboardControls()
 		// this.keepPlayerWithinScreenBoundaries()
-		// this.centerCamOnPlayer()
+		
 
 		if(this.rand360 <= 0){
 			if(this.randColChange < 0)
@@ -405,16 +381,13 @@ class Game{
 		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
 		this.terrain.beginFill(col, 1)
 
-		// this.max += .01
-		// this.min += .01
-
 		//get map info
 		let xIter = 0
 		let yIter = 0
 		let squares = {}
 
-		let regX = -this.mapContainer.x / this.tileSize
-		let regY = -this.mapContainer.y / this.tileSize
+		let regX = (-this.mapContainer.x / this.tileSize)
+		let regY = (-this.mapContainer.y / this.tileSize)
 		let mapX = Math.floor(regX)
 		let mapY = Math.floor(regY)
 		
@@ -439,21 +412,6 @@ class Game{
 
 				noise = (noise + (noise2)) / 2
 
-				// let mult = 3
-				// let multIter = mult
-				// let res = 0
-				// while(multIter > 0){
-				// 	res += noise / multIter
-				// 	multIter--
-				// }
-				// noise = res / mult
-
-
-				// let u = ((this.gameTileD + this.lastX) - this.lastX) / x
-				// let col = "0x" + colorconvert.hsl.hex(u * 6, u * 100, u * 50)
-				// let col = "0x" + colorconvert.hsl.hex(s * this.rand360, 100, 50)
-				// this.terrain.beginFill(col, 1)
-
 				if(noise < this.threshold){
 					if(squares[x] === undefined){
 						squares[x] = {}
@@ -461,7 +419,7 @@ class Game{
 					if(squares[x][y] === undefined){
 						squares[x][y] = 0
 					}
-					
+
 					this.astarmap[yIter][xIter] = 0
 				}else{
 					this.astarmap[yIter][xIter] = 1
@@ -502,13 +460,11 @@ class Game{
 		}
 
 		if(this.keyState["click"]){
-	        let destTileX = this.worldToTile(this.mousex - (this.mapContainer.x % this.tileSize))
-	        let destTileY = this.worldToTile(this.mousey - (this.mapContainer.y % this.tileSize))
+	        let destTileX = this.worldToTile(this.mousex - this.camContainer.x)
+	        let destTileY = this.worldToTile(this.mousey - this.camContainer.y)
 
 	        let playerTileX = this.worldToTile(this.screenToWorldX(this.player.x))
 	        let playerTileY = this.worldToTile(this.screenToWorldY(this.player.y))
-
-	        console.log(destTileX)
 
         	if(!this.player.moving){
         		this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
@@ -533,8 +489,6 @@ class Game{
 			this.keyState['zoomOut'] = false
 		}
 
-		this.findSections(squares)
-
 		//change player destination
 		if(this.player.onSpot == true && this.player.chosenNextDest.length > 0){
 			this.player.path = null
@@ -550,34 +504,6 @@ class Game{
 	        this.setPlayerPath(playerTileX, playerTileY, destTileX, destTileY)
 		}
 
-		//move player
-		if(this.player.path !== null){
-			this.terrain.beginFill(0xffff66, 1)
-
-			if(this.player.path[this.player.pathIter] !== undefined){
-
-				this.player.onSpot = false
-
-				let stepSize = this.tileSize / (this.player.moveSpeed / (1000 / 60))
-			
-				if(this.player.x < this.playerDestX())
-				{
-					this.player.x += stepSize
-				}else if(this.player.x > this.playerDestX())
-				{
-					this.player.x -= stepSize
-				}
-
-				if(this.player.y < this.playerDestY())
-				{
-					this.player.y += stepSize
-				}else if(this.player.y > this.playerDestY())
-				{
-					this.player.y -= stepSize
-				}
-			}
-		}
-
 		//render player
 		this.terrain.beginFill(0xffffff, 1)
 		this.paintSquare(
@@ -585,6 +511,8 @@ class Game{
 			this.player.y, 
 			this.tileSize, 
 			this.tileSize)
+
+		this.centerCamOnPlayer()
 	}
 }
 
