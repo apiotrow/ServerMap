@@ -107,8 +107,6 @@ class Game{
 
 		//player
 		this.player = {}
-		this.player.x = 0
-		this.player.y = 0
 		this.player.path = null
 		this.player.pathIter = 1
 		this.player.moveInterval
@@ -116,8 +114,16 @@ class Game{
 		this.player.moving = false
 		this.player.onSpot = true
 		this.player.chosenNextDest = []
+		//position of player in grid
+		this.player.pathX = 0
+		this.player.pathY = 0
+		//position of player in container
+		this.player.x = 0
+		this.player.y = 0
 
 		this.changer = 3
+		this.mapXOffset = 1
+		this.mapYOffset = 1
 	}
 
 	paintSquare(x, y, w, h){
@@ -128,6 +134,15 @@ class Game{
 		if(this.playerInScreen()){
 			//make sure player is in screen
 	    	this.es.setGrid(this.astarmap)
+
+	    	//check if start or end point is outside
+	    	//of astar map
+	    	if(fromX < 0 || fromY < 0
+	    		|| toX < 0 || toY < 0
+	    		|| fromX >= this.astarmap.length || fromY >= this.astarmap.length
+	    		|| toX >= this.astarmap.length || toY >= this.astarmap.length)
+	    		return
+
 	        this.es.findPath(fromX, fromY, toX, toY, (path)=>{
 	        	this.player.pathIter = 1
 	        	this.player.path = path
@@ -140,6 +155,9 @@ class Game{
 						this.player.path[i].x = 
 						(this.player.path[i].x * this.tileSize) - this.mapContainer.x
 					}
+
+					this.player.pathX = this.playerGridPosX()
+					this.player.pathY = this.playerGridPosY()
 				}
 
 	        	clearInterval(this.player.moveInterval)
@@ -150,9 +168,13 @@ class Game{
 						this.player.moving = true
 
 						if(this.player.path[this.player.pathIter] !== undefined){
+							//update player's container position
 							this.player.x = this.playerDestX()
-					
 							this.player.y = this.playerDestY()
+
+							//update player's grid position
+							this.player.pathX = this.playerGridPosX()
+							this.player.pathY = this.playerGridPosY()
 
 							this.player.pathIter++
 						}else{
@@ -168,6 +190,18 @@ class Game{
 
 	        this.es.calculate()
 	    }
+	}
+
+	//player's x position in grid
+	playerGridPosX(){
+		return (this.player.path[this.player.pathIter].x - this.mapContainer.x) / 
+					this.tileSize
+	}
+
+	//player's y position in grid
+	playerGridPosY(){
+		return (this.player.path[this.player.pathIter].y - this.mapContainer.y) / 
+					this.tileSize
 	}
 
 	playerDestX(){
@@ -236,16 +270,21 @@ class Game{
 	}
 
 	cameraKeyboardControls(){
+		let amt = 0.2
 		if(this.keyState['w'] == true){
+			// this.mapYOffset -= amt
 			this.moveCamY(this.camSpeed)
 		}
 		if(this.keyState['s'] == true){
+			// this.mapYOffset += amt
 			this.moveCamY(-this.camSpeed)
 		}
 		if(this.keyState['d'] == true){
+			// this.mapXOffset += amt
 			this.moveCamX(-this.camSpeed)
 		}
 		if(this.keyState['a'] == true){
+			// this.mapXOffset -= amt
 			this.moveCamX(this.camSpeed)
 		}
 	}
@@ -347,6 +386,30 @@ class Game{
 			}
 			this.astarmap.push(aStarMapCol)
 		}
+ 		
+ 		//adjust player so they maintain their position
+ 		//within map
+		if(amt < 0){
+			this.player.x -= this.player.pathX
+			this.player.y -= this.player.pathY
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].x -= this.player.pathX
+					this.player.path[i].y -= this.player.pathY
+				}
+			}
+		}else if(amt > 0){
+			this.player.x += this.player.pathX
+			this.player.y += this.player.pathY
+
+			if(this.player.path !== null){
+				for(let i = 0; i < this.player.path.length; i++){
+					this.player.path[i].x += this.player.pathX
+					this.player.path[i].y += this.player.pathY
+				}
+			}
+		}
 
 		this.keyState['zoomIn'] = false
 	}
@@ -388,7 +451,7 @@ class Game{
 		let regY = (-this.mapContainer.y / this.tileSize)
 		let mapX = Math.floor(regX)
 		let mapY = Math.floor(regY)
-		
+
 		for(
 			let x = mapX; 
 			x < this.gameTileD + mapX; 
@@ -401,12 +464,12 @@ class Game{
 				y++)
 			{
 				let noise = this.simplex.noise2D(
-					x / (this.divisor / 1), 
-					y / (this.divisor / 1))
+					(x + this.mapXOffset) / (this.divisor / 1), 
+					(y + this.mapYOffset) / (this.divisor / 1))
 
 				let noise2 = this.simplex.noise2D(
-					x / (this.divisor / this.changer), 
-					y / (this.divisor / this.changer))
+					(x + this.mapXOffset) / (this.divisor / this.changer), 
+					(y + this.mapYOffset) / (this.divisor / this.changer))
 
 				noise = (noise + (noise2)) / 2
 
