@@ -37,7 +37,7 @@ class Room{
 
 
 		// this.simplex = new SimplexNoise(Math.random)
-		this.simplex = new SimplexNoise(()=>{return 0.38})
+		this.simplex = new SimplexNoise(()=>{return 0.34})
 
 		this.divisor = 36 
 
