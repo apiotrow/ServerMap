@@ -3,9 +3,12 @@ let easystarjs = require('easystarjs')
 let colorconvert = require('color-convert')
 
 class Room{
-	constructor(mapContainer, renderer){
+	constructor(mapContainer, renderer, tileSize, dimension, x, y){
 		this.mapContainer = mapContainer
 		this.renderer = renderer
+
+		this.x = x
+		this.y = y
 
 		this.graphics = new PIXI.Graphics()
 
@@ -16,10 +19,10 @@ class Room{
 		this.randColChange = 0.7
 
 		//size of each square
-		this.tileSize = 10
+		this.tileSize = tileSize
 
-		//width/height map needs to be to completely fill canvas
-		this.dimension = this.worldToTile(this.renderer.width)
+		//width/height of map
+		this.dimension = dimension
 
 		this.astarmap = []
 		for(let x = 0; x < this.dimension; x++){
@@ -89,8 +92,8 @@ class Room{
 
 		let regX = (-this.mapContainer.x / this.tileSize)
 		let regY = (-this.mapContainer.y / this.tileSize)
-		let mapX = Math.floor(regX)
-		let mapY = Math.floor(regY)
+		let mapX = Math.floor(regX) + this.x
+		let mapY = Math.floor(regY) + this.y
 
 		for(
 			let x = mapX; 

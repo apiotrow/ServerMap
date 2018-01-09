@@ -14,16 +14,33 @@ class Game{
 
 		this.mapContainer = new PIXI.Container()
 
-		this.room = new Room(this.mapContainer, this.app.renderer)
-		this.player = new Player(this.room.tileSize, this.room)
+		this.rooms = []
+		for(let x = 0; x < 5; x++){
+			for(let y = 0; y < 5; y++){
+				let tileSize = 10
+				let dimension = 40
 
-		this.mapContainer.addChild(this.room.graphics)
+				this.rooms.push(new Room(
+					this.mapContainer, 
+					this.app.renderer,
+					tileSize,
+					dimension,
+					x * dimension, 
+					y * dimension))
+			}
+		}
+		this.player = new Player(this.rooms[0].tileSize, this.rooms[0])
+
+		for(let i in this.rooms){
+			this.mapContainer.addChild(this.rooms[i].graphics)
+		}
+
 		this.camContainer  = new PIXI.Container()
 		this.app.stage.addChild(this.camContainer)
 		this.camContainer.addChild(this.mapContainer)
 
 		//camera pan speed
-		this.camSpeed = 2
+		this.camSpeed = 20
 
 		this.keyState = {}
 		window.addEventListener('keydown', (e)=>{
@@ -195,7 +212,7 @@ class Game{
 	}
 
 	zoom(amt){
-		this.room.zoom(amt)
+		this.rooms[0].zoom(amt)
 		this.player.zoom(amt)
  		
 		this.keyState['zoomIn'] = false
@@ -205,11 +222,11 @@ class Game{
 		let changed = false
 
 		if(this.keyState['r'] == true){
-			this.room.changer *= 1.01
+			this.rooms[0].changer *= 1.01
 			changed = true
 		}
 		if(this.keyState['f'] == true){
-			this.room.changer /= 1.01
+			this.rooms[0].changer /= 1.01
 			changed = true
 		}
 	}
@@ -237,7 +254,9 @@ class Game{
 		this.player.update()
 		
 		//update room
-		this.room.update(this.mapXOffset, this.mapYOffset, this.player.x, this.player.y)
+		for(let i in this.rooms){
+			this.rooms[i].update(this.mapXOffset, this.mapYOffset, this.player.x, this.player.y)
+		}
 
 		// this.centerCamOnPlayer()
 	}
