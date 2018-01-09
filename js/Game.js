@@ -9,16 +9,17 @@ let Room = require('./Room.js')
 let Player = require('./Player.js')
 
 class Game{
-	constructor(seed, rule, app, canvas){
+	constructor(app, canvas){
 		this.app = app
 
 		this.mapContainer = new PIXI.Container()
 
 		this.rooms = []
-		for(let x = 0; x < 5; x++){
-			for(let y = 0; y < 5; y++){
+		for(let x = 0; x < 7; x++){
+			for(let y = 0; y < 7; y++){
 				let tileSize = 10
 				let dimension = 40
+				let seed = parseFloat(x + "" + y)
 
 				this.rooms.push(new Room(
 					this.mapContainer, 
@@ -26,7 +27,8 @@ class Game{
 					tileSize,
 					dimension,
 					x * dimension, 
-					y * dimension))
+					y * dimension,
+					seed))
 			}
 		}
 		this.player = new Player(this.rooms[0].tileSize, this.rooms[0])

@@ -1,9 +1,10 @@
 let SimplexNoise = require('simplex-noise')
 let easystarjs = require('easystarjs')
 let colorconvert = require('color-convert')
+var seedrandom = require('seedrandom')
 
 class Room{
-	constructor(mapContainer, renderer, tileSize, dimension, x, y){
+	constructor(mapContainer, renderer, tileSize, dimension, x, y, seed){
 		this.mapContainer = mapContainer
 		this.renderer = renderer
 
@@ -40,13 +41,14 @@ class Room{
 
 
 		// this.simplex = new SimplexNoise(Math.random)
-		this.simplex = new SimplexNoise(()=>{return 0.34})
+		this.simplex = new SimplexNoise(()=>{return parseFloat("." + seed)})
+		// this.simplex = new SimplexNoise(()=>{return 0.45})
 
 		this.divisor = 36 
 
 		this.threshold = -.15
 
-		this.changer = 3
+		this.changer = Math.floor(seedrandom(seed)() * 10) + 1
 	}
 
 	worldToTile(world){
@@ -106,6 +108,14 @@ class Room{
 				y < this.dimension + mapY; 
 				y++)
 			{
+				// let noise = this.simplex.noise2D(
+				// 	(x + this.x + mapXOffset) / (this.divisor / 1), 
+				// 	(y + this.y + mapYOffset) / (this.divisor / 1))
+
+				// let noise2 = this.simplex.noise2D(
+				// 	(x + this.x + mapXOffset) / (this.divisor / this.changer), 
+				// 	(y + this.y + mapYOffset) / (this.divisor / this.changer))
+
 				let noise = this.simplex.noise2D(
 					(x + mapXOffset) / (this.divisor / 1), 
 					(y + mapYOffset) / (this.divisor / 1))

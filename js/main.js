@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		})
 		document.body.appendChild(app.view)
 
-	let game = new Game("a", "one", app, gameView)
+	let game = new Game(app, gameView)
 
 
 
