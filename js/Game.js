@@ -5,46 +5,25 @@ let easystarjs = require('easystarjs')
 let work = require('webworkify')
 let siplexworker = work(require('./simplexworker.js'))
 
+let Room = require('./Room.js')
+
 class Game{
 	constructor(seed, rule, app, canvas){
-		this.terrain = new PIXI.Graphics()
-
 		this.app = app
 
 		this.mapContainer = new PIXI.Container()
-		// this.app.stage.addChild(this.mapContainer)
-		this.mapContainer.addChild(this.terrain)
-
+		this.room = new Room(this.mapContainer, this.app.renderer)
+		this.mapContainer.addChild(this.room.graphics)
 		this.camContainer  = new PIXI.Container()
 		this.app.stage.addChild(this.camContainer)
 		this.camContainer.addChild(this.mapContainer)
 
-		//size of each square
-		this.tileSize = 10
-
 		//camera pan speed
-		this.camSpeed = 4
-
-		//width/height map needs to be to completely fill canvas
-		this.gameTileD = this.worldToTile(this.app.renderer.width)
+		this.camSpeed = 2
 
 		//random color for map
 		this.rand360 = Math.floor(Math.random() * 360)
 		this.randColChange = 0.7
-
-		this.astarmap = []
-		for(let x = 0; x < this.gameTileD; x++){
-			let aStarMapCol = []
-			for(let y = 0; y < this.gameTileD; y++){
-				aStarMapCol.push(0)
-			}
-			this.astarmap.push(aStarMapCol)
-		}
-		this.es = new easystarjs.js()
-		this.es.setAcceptableTiles(1)
-		this.es.enableDiagonals()
-		this.es.disableCornerCutting()
-		this.es.setGrid(this.astarmap)
 
 		this.keyState = {}
 		window.addEventListener('keydown', (e)=>{
@@ -85,13 +64,6 @@ class Game{
 			this.mousey = evt.offsetY
 		})
 
-		// this.simplex = new SimplexNoise(Math.random)
-		this.simplex = new SimplexNoise(()=>{return 0.38})
-
-		this.divisor = 36 
-
-		this.threshold = -.15
-
 		siplexworker.addEventListener('message', function (ev) {
 		    console.log(ev.data)
 		})
@@ -110,7 +82,7 @@ class Game{
 		this.player.path = null
 		this.player.pathIter = 1
 		this.player.moveInterval
-		this.player.moveSpeed = (1000 / 60) * this.tileSize * 0.5
+		this.player.moveSpeed = (1000 / 60) * this.room.tileSize * 0.5
 		this.player.moving = false
 		this.player.onSpot = true
 		this.player.chosenNextDest = []
@@ -127,33 +99,33 @@ class Game{
 	}
 
 	paintSquare(x, y, w, h){
-		this.terrain.drawRect(x, y, w, h)
+		this.room.graphics.drawRect(x, y, w, h)
 	}
 
 	setPlayerPath(fromX, fromY, toX, toY){
 		if(this.playerInScreen()){
 			//make sure player is in screen
-	    	this.es.setGrid(this.astarmap)
+	    	this.room.es.setGrid(this.room.astarmap)
 
 	    	//check if start or end point is outside
 	    	//of astar map
 	    	if(fromX < 0 || fromY < 0
 	    		|| toX < 0 || toY < 0
-	    		|| fromX >= this.astarmap.length || fromY >= this.astarmap.length
-	    		|| toX >= this.astarmap.length || toY >= this.astarmap.length)
+	    		|| fromX >= this.room.astarmap.length || fromY >= this.room.astarmap.length
+	    		|| toX >= this.room.astarmap.length || toY >= this.room.astarmap.length)
 	    		return
 
-	        this.es.findPath(fromX, fromY, toX, toY, (path)=>{
+	        this.room.es.findPath(fromX, fromY, toX, toY, (path)=>{
 	        	this.player.pathIter = 1
 	        	this.player.path = path
 
 	        	if(this.player.path !== null){
 		        	for(let i = 0; i < this.player.path.length; i++){
 						this.player.path[i].y = 
-						(this.player.path[i].y * this.tileSize) - this.mapContainer.y
+						(this.player.path[i].y * this.room.tileSize) - this.mapContainer.y
 
 						this.player.path[i].x = 
-						(this.player.path[i].x * this.tileSize) - this.mapContainer.x
+						(this.player.path[i].x * this.room.tileSize) - this.mapContainer.x
 					}
 
 					this.player.pathX = this.playerGridPosX()
@@ -188,20 +160,20 @@ class Game{
 				}, this.player.moveSpeed)
 	        })
 
-	        this.es.calculate()
+	        this.room.es.calculate()
 	    }
 	}
 
 	//player's x position in grid
 	playerGridPosX(){
 		return (this.player.path[this.player.pathIter].x - this.mapContainer.x) / 
-					this.tileSize
+					this.room.tileSize
 	}
 
 	//player's y position in grid
 	playerGridPosY(){
 		return (this.player.path[this.player.pathIter].y - this.mapContainer.y) / 
-					this.tileSize
+					this.room.tileSize
 	}
 
 	playerDestX(){
@@ -217,8 +189,8 @@ class Game{
 	    let playerTileY = this.worldToTile(this.player.y + this.mapContainer.y)
 
 	    if(playerTileX > -1 && playerTileY > -1 
-    	&& playerTileX < this.gameTileD
-    	&& playerTileY < this.gameTileD)
+    	&& playerTileX < this.room.dimension
+    	&& playerTileY < this.room.dimension)
     	{
 	    	return true
 	    }
@@ -226,7 +198,7 @@ class Game{
 	}
 
 	worldToTile(world){
-		return Math.floor(world / this.tileSize)
+		return Math.floor(world / this.room.tileSize)
 	}
 
 	screenToWorldX(screenX){
@@ -253,10 +225,10 @@ class Game{
 		if(this.worldToTile(this.screenToWorldX(this.player.x)) < 1){
 			this.moveCamX(1)
 		}
-		if(this.worldToTile(this.screenToWorldX(this.player.x)) > this.gameTileD - 2){
+		if(this.worldToTile(this.screenToWorldX(this.player.x)) > this.room.dimension - 2){
 			this.moveCamX(-1)
 		}
-		if(this.worldToTile(this.screenToWorldY(this.player.y)) > this.gameTileD - 2){
+		if(this.worldToTile(this.screenToWorldY(this.player.y)) > this.room.dimension - 2){
 			this.moveCamY(-1)
 		}
 		if(this.worldToTile(this.screenToWorldY(this.player.y)) < 1){
@@ -270,22 +242,33 @@ class Game{
 	}
 
 	cameraKeyboardControls(){
-		let amt = 0.2
+		//move grid or container
+		let moveGrid = false
+
+		let gridMoveAmt = 1
 		if(this.keyState['w'] == true){
-			// this.mapYOffset -= amt
-			this.moveCamY(this.camSpeed)
+			if(moveGrid)
+				this.mapYOffset -= gridMoveAmt
+			else
+				this.moveCamY(this.camSpeed)
 		}
 		if(this.keyState['s'] == true){
-			// this.mapYOffset += amt
-			this.moveCamY(-this.camSpeed)
+			if(moveGrid)
+				this.mapYOffset += gridMoveAmt
+			else
+				this.moveCamY(-this.camSpeed)
 		}
 		if(this.keyState['d'] == true){
-			// this.mapXOffset += amt
-			this.moveCamX(-this.camSpeed)
+			if(moveGrid)
+				this.mapXOffset += gridMoveAmt
+			else
+				this.moveCamX(-this.camSpeed)
 		}
 		if(this.keyState['a'] == true){
-			// this.mapXOffset -= amt
-			this.moveCamX(this.camSpeed)
+			if(moveGrid)
+				this.mapXOffset -= gridMoveAmt
+			else
+				this.moveCamX(this.camSpeed)
 		}
 	}
 
@@ -374,17 +357,17 @@ class Game{
 	}
 
 	zoom(amt){
-		this.tileSize += amt
-		this.gameTileD = Math.floor(this.app.renderer.width / this.tileSize)
+		this.room.tileSize += amt
+		this.room.dimension = Math.floor(this.app.renderer.width / this.room.tileSize)
 
 		//remake astar map since we just changed size of map
-		this.astarmap = []
-		for(let x = 0; x < this.gameTileD; x++){
+		this.room.astarmap = []
+		for(let x = 0; x < this.room.dimension; x++){
 			let aStarMapCol = []
-			for(let y = 0; y < this.gameTileD; y++){
+			for(let y = 0; y < this.room.dimension; y++){
 				aStarMapCol.push(0)
 			}
-			this.astarmap.push(aStarMapCol)
+			this.room.astarmap.push(aStarMapCol)
 		}
  		
  		//adjust player so they maintain their position
@@ -393,29 +376,29 @@ class Game{
 			this.player.x -= this.player.pathX
 			this.player.y -= this.player.pathY
 
-			if(this.player.path !== null){
-				for(let i = 0; i < this.player.path.length; i++){
-					this.player.path[i].x -= this.player.pathX
-					this.player.path[i].y -= this.player.pathY
-				}
-			}
+			// if(this.player.path !== null){
+			// 	for(let i = 0; i < this.player.path.length; i++){
+			// 		this.player.path[i].x -= this.player.pathX
+			// 		this.player.path[i].y -= this.player.pathY
+			// 	}
+			// }
 		}else if(amt > 0){
 			this.player.x += this.player.pathX
 			this.player.y += this.player.pathY
 
-			if(this.player.path !== null){
-				for(let i = 0; i < this.player.path.length; i++){
-					this.player.path[i].x += this.player.pathX
-					this.player.path[i].y += this.player.pathY
-				}
-			}
+			// if(this.player.path !== null){
+			// 	for(let i = 0; i < this.player.path.length; i++){
+			// 		this.player.path[i].x += this.player.pathX
+			// 		this.player.path[i].y += this.player.pathY
+			// 	}
+			// }
 		}
 
 		this.keyState['zoomIn'] = false
 	}
 
 	update(){
-		this.terrain.clear()
+		this.room.graphics.clear()
 
 		if(this.keyState['zoomIn']){
 			this.zoom(1)
@@ -440,40 +423,40 @@ class Game{
 		this.rand360 += this.randColChange
 		
 		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
-		this.terrain.beginFill(col, 1)
+		this.room.graphics.beginFill(col, 1)
 
 		//get map info
 		let xIter = 0
 		let yIter = 0
 		let squares = {}
 
-		let regX = (-this.mapContainer.x / this.tileSize)
-		let regY = (-this.mapContainer.y / this.tileSize)
+		let regX = (-this.mapContainer.x / this.room.tileSize)
+		let regY = (-this.mapContainer.y / this.room.tileSize)
 		let mapX = Math.floor(regX)
 		let mapY = Math.floor(regY)
 
 		for(
 			let x = mapX; 
-			x < this.gameTileD + mapX; 
+			x < this.room.dimension + mapX; 
 			x++)
 		{
 			yIter = 0
 			for(
 				let y = mapY; 
-				y < this.gameTileD + mapY; 
+				y < this.room.dimension + mapY; 
 				y++)
 			{
-				let noise = this.simplex.noise2D(
-					(x + this.mapXOffset) / (this.divisor / 1), 
-					(y + this.mapYOffset) / (this.divisor / 1))
+				let noise = this.room.simplex.noise2D(
+					(x + this.mapXOffset) / (this.room.divisor / 1), 
+					(y + this.mapYOffset) / (this.room.divisor / 1))
 
-				let noise2 = this.simplex.noise2D(
-					(x + this.mapXOffset) / (this.divisor / this.changer), 
-					(y + this.mapYOffset) / (this.divisor / this.changer))
+				let noise2 = this.room.simplex.noise2D(
+					(x + this.mapXOffset) / (this.room.divisor / this.changer), 
+					(y + this.mapYOffset) / (this.room.divisor / this.changer))
 
 				noise = (noise + (noise2)) / 2
 
-				if(noise < this.threshold){
+				if(noise < this.room.threshold){
 					if(squares[x] === undefined){
 						squares[x] = {}
 					}
@@ -481,16 +464,16 @@ class Game{
 						squares[x][y] = 0
 					}
 
-					if(this.astarmap[yIter] !== undefined
-						&& this.astarmap[yIter][xIter] !== undefined)
+					if(this.room.astarmap[yIter] !== undefined
+						&& this.room.astarmap[yIter][xIter] !== undefined)
 					{
-						this.astarmap[yIter][xIter] = 0
+						this.room.astarmap[yIter][xIter] = 0
 					}
 				}else{
-					if(this.astarmap[yIter] !== undefined
-						&& this.astarmap[yIter][xIter] !== undefined)
+					if(this.room.astarmap[yIter] !== undefined
+						&& this.room.astarmap[yIter][xIter] !== undefined)
 					{
-						this.astarmap[yIter][xIter] = 1
+						this.room.astarmap[yIter][xIter] = 1
 					}
 				}
 				yIter++
@@ -498,31 +481,31 @@ class Game{
 			xIter++
 		}
 
-		this.terrain.beginFill(col, 1)
+		this.room.graphics.beginFill(col, 1)
 		for(
 			let x = mapX; 
-			x < this.gameTileD + mapX; 
+			x < this.room.dimension + mapX; 
 			x++)
 		{
 			for(
 				let y = mapY; 
-				y < this.gameTileD + mapY; 
+				y < this.room.dimension + mapY; 
 				y++)
 			{
 				if(squares[x] !== undefined){
 					if(squares[x][y] !== undefined){
 
 						// if(this.neighborCount(x, y, squares) < 7){
-						// 	this.terrain.beginFill(0x000000, 1)
+						// 	this.room.beginFill(0x000000, 1)
 						// }else{
-							// this.terrain.beginFill(col, 1)
+							// this.room.beginFill(col, 1)
 						// }
 
 						this.paintSquare(
-							x * this.tileSize, 
-							y * this.tileSize, 
-							this.tileSize, 
-							this.tileSize)
+							x * this.room.tileSize, 
+							y * this.room.tileSize, 
+							this.room.tileSize, 
+							this.room.tileSize)
 					}
 				}
 			}
@@ -567,14 +550,14 @@ class Game{
 		//has to be down here for change destination mid-path
 		//code won't work
 		if(this.player.path !== null){
-			this.terrain.beginFill(0xffff66, 1)
+			this.room.graphics.beginFill(0xffff66, 1)
 
 			if(this.player.path[this.player.pathIter] !== undefined)
 				{
 
 				this.player.onSpot = false
 
-				let stepSize = this.tileSize / (this.player.moveSpeed / (1000 / 60))
+				let stepSize = this.room.tileSize / (this.player.moveSpeed / (1000 / 60))
 
 				if(this.player.x < this.playerDestX())
 				{
@@ -595,12 +578,12 @@ class Game{
 		}
 
 		//render player
-		this.terrain.beginFill(0xffffff, 1)
+		this.room.graphics.beginFill(0xffffff, 1)
 		this.paintSquare(
 			this.player.x, 
 			this.player.y, 
-			this.tileSize, 
-			this.tileSize)
+			this.room.tileSize, 
+			this.room.tileSize)
 
 		// this.centerCamOnPlayer()
 	}
