@@ -7,6 +7,7 @@ class Room{
 	constructor(mapContainer, renderer, tileSize, dimension, x, y, seed){
 		this.mapContainer = mapContainer
 		this.renderer = renderer
+		this.seed = seedrandom(seed)()
 
 		this.x = x
 		this.y = y
@@ -16,8 +17,10 @@ class Room{
 		this.mapContainer.addChild(this.graphics)
 
 		//random color for map
-		this.rand360 = Math.floor(Math.random() * 360)
-		this.randColChange = 0.7
+		this.col ="0x" + colorconvert.hsl.hex(
+			Math.floor(this.seed * 360), 
+			100, 
+			50) 
 
 		//size of each square
 		this.tileSize = tileSize
@@ -41,14 +44,14 @@ class Room{
 
 
 		// this.simplex = new SimplexNoise(Math.random)
-		this.simplex = new SimplexNoise(()=>{return parseFloat("." + seed)})
+		this.simplex = new SimplexNoise(()=>{return this.seed})
 		// this.simplex = new SimplexNoise(()=>{return 0.45})
 
-		this.divisor = 36 
+		this.divisor = 30
 
 		this.threshold = -.15
 
-		this.changer = Math.floor(seedrandom(seed)() * 10) + 1
+		this.changer = Math.floor(this.seed * 10) + 1
 	}
 
 	worldToTile(world){
@@ -77,16 +80,7 @@ class Room{
 	update(mapXOffset, mapYOffset, playerX, playerY){
 		this.graphics.clear()
 
-		if(this.rand360 <= 0){
-			if(this.randColChange < 0)
-				this.randColChange = -this.randColChange
-		}else if(this.rand360 >= 360){
-			if(this.randColChange > 0)
-				this.randColChange = -this.randColChange
-		}
-		this.rand360 += this.randColChange
-		let col = "0x" + colorconvert.hsl.hex(this.rand360, 100, 50)
-		this.graphics.beginFill(col, 1)
+		this.graphics.beginFill(this.col, 1)
 
 		let xIter = 0
 		let yIter = 0
@@ -151,7 +145,7 @@ class Room{
 			xIter++
 		}
 
-		this.graphics.beginFill(col, 1)
+		this.graphics.beginFill(this.col, 1)
 		for(
 			let x = mapX; 
 			x < this.dimension + mapX; 
@@ -168,7 +162,7 @@ class Room{
 						// if(this.neighborCount(x, y, squares) < 7){
 						// 	this.room.beginFill(0x000000, 1)
 						// }else{
-							// this.room.beginFill(col, 1)
+							// this.room.beginFill(this.col, 1)
 						// }
 
 						this.paintSquare(
@@ -180,14 +174,6 @@ class Room{
 				}
 			}
 		}
-
-		//render player
-		this.graphics.beginFill(0xffffff, 1)
-		this.paintSquare(
-			playerX, 
-			playerY, 
-			this.tileSize, 
-			this.tileSize)
 	}
 }
 module.exports = Room

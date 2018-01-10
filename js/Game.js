@@ -7,6 +7,7 @@ let siplexworker = work(require('./simplexworker.js'))
 
 let Room = require('./Room.js')
 let Player = require('./Player.js')
+let Walls = require('./Walls.js')
 
 class Game{
 	constructor(app, canvas){
@@ -15,26 +16,40 @@ class Game{
 		this.mapContainer = new PIXI.Container()
 
 		this.rooms = []
-		for(let x = 0; x < 7; x++){
-			for(let y = 0; y < 7; y++){
+		let mapSize = 10
+		for(let x = 0; x < mapSize; x++){
+			let roomsCol = []
+			for(let y = 0; y < mapSize; y++){
 				let tileSize = 10
 				let dimension = 40
 				let seed = parseFloat(x + "" + y)
 
-				this.rooms.push(new Room(
+				roomsCol.push(new Room(
 					this.mapContainer, 
 					this.app.renderer,
 					tileSize,
 					dimension,
-					x * dimension, 
-					y * dimension,
+					x * (dimension + 1), 
+					y * (dimension + 1),
 					seed))
 			}
+			this.rooms.push(roomsCol)
 		}
-		this.player = new Player(this.rooms[0].tileSize, this.rooms[0])
+		this.player = new Player(
+			this.rooms,
+			this.mapContainer)
+
+		this.walls
+		for(let x = 0; x < mapSize; x++){
+			for(let y = 0; y < mapSize; y++){
+
+			}
+		}
 
 		for(let i in this.rooms){
-			this.mapContainer.addChild(this.rooms[i].graphics)
+			for(let j in this.rooms[i]){
+				this.mapContainer.addChild(this.rooms[i][j].graphics)
+			}
 		}
 
 		this.camContainer  = new PIXI.Container()
@@ -42,7 +57,7 @@ class Game{
 		this.camContainer.addChild(this.mapContainer)
 
 		//camera pan speed
-		this.camSpeed = 20
+		this.camSpeed = 10
 
 		this.keyState = {}
 		window.addEventListener('keydown', (e)=>{
@@ -98,6 +113,16 @@ class Game{
 
 		this.mapXOffset = 1
 		this.mapYOffset = 1
+
+		for(let i in this.rooms){
+			for(let j in this.rooms[i]){
+				this.rooms[i][j].update(
+					this.mapXOffset, 
+					this.mapYOffset, 
+					this.player.x, 
+					this.player.y)
+			}
+		}
 	}
 
 	moveCamY(amt){
@@ -214,7 +239,7 @@ class Game{
 	}
 
 	zoom(amt){
-		this.rooms[0].zoom(amt)
+		this.rooms[0][0].zoom(amt)
 		this.player.zoom(amt)
  		
 		this.keyState['zoomIn'] = false
@@ -224,11 +249,11 @@ class Game{
 		let changed = false
 
 		if(this.keyState['r'] == true){
-			this.rooms[0].changer *= 1.01
+			this.rooms[0][0].changer *= 1.01
 			changed = true
 		}
 		if(this.keyState['f'] == true){
-			this.rooms[0].changer /= 1.01
+			this.rooms[0][0].changer /= 1.01
 			changed = true
 		}
 	}
@@ -256,9 +281,15 @@ class Game{
 		this.player.update()
 		
 		//update room
-		for(let i in this.rooms){
-			this.rooms[i].update(this.mapXOffset, this.mapYOffset, this.player.x, this.player.y)
-		}
+		// for(let i in this.rooms){
+		// 	for(let j in this.rooms[i]){
+		// 		this.rooms[i][j].update(
+		// 			this.mapXOffset, 
+		// 			this.mapYOffset, 
+		// 			this.player.x, 
+		// 			this.player.y)
+		// 	}
+		// }
 
 		// this.centerCamOnPlayer()
 	}
