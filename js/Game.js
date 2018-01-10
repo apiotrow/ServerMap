@@ -17,6 +17,7 @@ class Game{
 
 		this.rooms = []
 		let mapSize = 10
+		let spacing = 2
 		for(let x = 0; x < mapSize; x++){
 			let roomsCol = []
 			for(let y = 0; y < mapSize; y++){
@@ -29,15 +30,16 @@ class Game{
 					this.app.renderer,
 					tileSize,
 					dimension,
-					x * (dimension + 1), 
-					y * (dimension + 1),
+					x * (dimension + spacing), 
+					y * (dimension + spacing),
 					seed))
 			}
 			this.rooms.push(roomsCol)
 		}
 		this.player = new Player(
 			this.rooms,
-			this.mapContainer)
+			this.mapContainer,
+			spacing)
 
 		this.walls
 		for(let x = 0; x < mapSize; x++){
@@ -259,13 +261,13 @@ class Game{
 	}
 
 	update(){
-		if(this.keyState['zoomIn']){
-			this.zoom(1)
-			this.keyState['zoomIn'] = false
-		}else if (this.keyState['zoomOut']){
-			this.zoom(-1)
-			this.keyState['zoomOut'] = false
-		}
+		// if(this.keyState['zoomIn']){
+		// 	this.zoom(1)
+		// 	this.keyState['zoomIn'] = false
+		// }else if (this.keyState['zoomOut']){
+		// 	this.zoom(-1)
+		// 	this.keyState['zoomOut'] = false
+		// }
 
 		this.editDivisors()
 		this.cameraKeyboardControls()

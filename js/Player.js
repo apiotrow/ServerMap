@@ -2,12 +2,13 @@
 
 
 class Player{
-	constructor(rooms, mapContainer){
+	constructor(rooms, mapContainer, spacing){
 		this.rooms = rooms
+		this.spacing = spacing
 
 		this.changeRoom(
 			1, 1,
-			3, 0)
+			0, 0)
 
 		this.mapContainer = mapContainer
 		this.graphics = new PIXI.Graphics()
@@ -35,11 +36,11 @@ class Player{
 
 		//x position of player in container
 		this.x = (inRoomX * this.room.tileSize) 
-		+ (this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
+		+ (this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
 
 		//y position of player in container
 		this.y = (inRoomY * this.room.tileSize) 
-		+ (this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
+		+ (this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
 	paint(x, y, w, h){
@@ -79,12 +80,12 @@ class Player{
 
 	destX(){
 		return (this.path[this.pathIter].x) + 
-		(this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
+		(this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
 	destY(){
 		return (this.path[this.pathIter].y) + 
-		(this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
+		(this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
 	setPath(fromX, fromY, toX, toY){
@@ -94,10 +95,10 @@ class Player{
     	//adjust start and end positions so 0,0
     	//is always upper left corner no matter what room
     	//we're in
-    	fromX -= this.roomX * (this.room.dimension + 1)
-    	fromY -= this.roomY * (this.room.dimension + 1)
-    	toX -= this.roomX  * (this.room.dimension + 1)
-    	toY -= this.roomY * (this.room.dimension + 1)
+    	fromX -= this.roomX * (this.room.dimension + this.spacing)
+    	fromY -= this.roomY * (this.room.dimension + this.spacing)
+    	toX -= this.roomX * (this.room.dimension + this.spacing)
+    	toY -= this.roomY * (this.room.dimension + this.spacing)
 
     	//check if start or end point is outside
     	//current room. if it is, move to new room
@@ -106,11 +107,21 @@ class Player{
     		|| fromX >= this.room.astarmap.length || fromY >= this.room.astarmap.length
     		|| toX >= this.room.astarmap.length || toY >= this.room.astarmap.length)
     	{
-    		//get new roomX and roomY
-    		let roomX = this.roomX + Math.floor(toX / (this.room.dimension + 1))
-    		let roomY = this.roomY + Math.floor(toY / (this.room.dimension + 1))
+    		//position player will start in in new room
+    		let inRoomX = toX % (this.room.dimension + this.spacing)
+    		let inRoomY = toY % (this.room.dimension + this.spacing)
+    		if(inRoomX < 0){
+    			inRoomX = (this.room.dimension + this.spacing) + inRoomX
+    		}
+    		if(inRoomY < 0){
+    			inRoomY = (this.room.dimension + this.spacing) + inRoomY
+    		}
 
-    		//if player clicked outside of map, ignore
+    		//get new roomX and roomY
+    		let roomX = this.roomX + Math.floor(toX / (this.room.dimension + this.spacing))
+    		let roomY = this.roomY + Math.floor(toY / (this.room.dimension + this.spacing))
+
+    		//if chosen room doesn't exist, ignore request
     		if(this.rooms[roomX] === undefined
     			|| this.rooms[roomX][roomY] === undefined)
     		{
@@ -120,8 +131,8 @@ class Player{
     		//move to room player clicked on
     		this.changeRoom(
 				roomX, roomY,
-				0, 0)
-
+				inRoomX, inRoomY)
+console.log(this.room.seed)
     		return
     	}
 
