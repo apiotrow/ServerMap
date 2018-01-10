@@ -1,11 +1,8 @@
 
-
-
-class Player{
-	constructor(rooms, mapContainer, spacing, color){
+class Mover{
+	constructor(rooms, mapContainer, spacing){
 		this.rooms = rooms
 		this.spacing = spacing
-		this.color = color
 
 		this.changeRoom(
 			1, 1,
@@ -44,9 +41,8 @@ class Player{
 		+ (this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
-	paint(w, h){
-		this.graphics.beginFill(this.color, 1)
-		this.graphics.drawRect(this.x, this.y, w, h)
+	paint(x, y, w, h){
+		this.graphics.drawRect(x, y, w, h)
 	}
 
 	//player's x position in grid
@@ -183,7 +179,7 @@ class Player{
 	}
 
 	//what player does click on map
-	tryMove(mouseX, mouseY, camContainer){
+	click(mouseX, mouseY, camContainer){
 		let destTileX = this.room.worldToTile(mouseX - camContainer.x)
         let destTileY = this.room.worldToTile(mouseY - camContainer.y)
 
@@ -197,32 +193,6 @@ class Player{
 	    	this.chosenNextDest.push(destTileY)
 	    }
 	}
-
-	// zoom(amt){
-	// 	//adjust player so they maintain their position
- // 		//within map
-	// 	if(amt < 0){
-	// 		this.x -= this.inRoomX
-	// 		this.y -= this.inRoomY
-
-	// 		// if(this.path !== null){
-	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x -= this.inRoomX
-	// 		// 		this.path[i].y -= this.inRoomY
-	// 		// 	}
-	// 		// }
-	// 	}else if(amt > 0){
-	// 		this.x += this.inRoomX
-	// 		this.y += this.inRoomY
-
-	// 		// if(this.path !== null){
-	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x += this.inRoomX
-	// 		// 		this.path[i].y += this.inRoomY
-	// 		// 	}
-	// 		// }
-	// 	}
-	// }
 
 	update(){
 		this.graphics.clear()
@@ -246,6 +216,8 @@ class Player{
 		//has to be down here for change destination mid-path
 		//code won't work
 		if(this.path !== null){
+			this.room.graphics.beginFill(0xffff66, 1)
+
 			if(this.path[this.pathIter] !== undefined)
 				{
 
@@ -272,9 +244,12 @@ class Player{
 		}
 
 		//render player
+		this.graphics.beginFill(0xffffff, 1)
 		this.paint(
+			this.x, 
+			this.y, 
 			this.room.tileSize, 
 			this.room.tileSize)
 	}
 }
-module.exports = Player
+module.exports = Mover

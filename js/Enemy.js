@@ -1,14 +1,13 @@
 
 
 
-class Player{
-	constructor(rooms, mapContainer, spacing, color){
-		this.rooms = rooms
+class Enemy{
+	constructor(room, mapContainer, spacing, color){
 		this.spacing = spacing
 		this.color = color
 
 		this.changeRoom(
-			1, 1,
+			room,
 			0, 0)
 
 		this.mapContainer = mapContainer
@@ -23,17 +22,17 @@ class Player{
 		this.chosenNextDest = []
 	}
 
-	changeRoom(roomX, roomY, inRoomX, inRoomY){
+	changeRoom(room, inRoomX, inRoomY){
+		//current room
+		this.room = room
+
 		//current room indexes
-		this.roomX = roomX
-		this.roomY = roomY
+		this.roomX = this.room.x / (this.room.dimension + this.spacing)
+		this.roomY = this.room.y / (this.room.dimension + this.spacing)
 
 		//position of player in grid
 		this.inRoomX = inRoomX
 		this.inRoomY = inRoomY
-
-		//current room
-		this.room = this.rooms[this.roomX][this.roomY]
 
 		//x position of player in container
 		this.x = (inRoomX * this.room.tileSize) 
@@ -96,32 +95,6 @@ class Player{
     		|| fromX >= this.room.astarmap.length || fromY >= this.room.astarmap.length
     		|| toX >= this.room.astarmap.length || toY >= this.room.astarmap.length)
     	{
-    		//position player will start in in new room
-    		let inRoomX = toX % (this.room.dimension + this.spacing)
-    		let inRoomY = toY % (this.room.dimension + this.spacing)
-    		if(inRoomX < 0){
-    			inRoomX = (this.room.dimension + this.spacing) + inRoomX
-    		}
-    		if(inRoomY < 0){
-    			inRoomY = (this.room.dimension + this.spacing) + inRoomY
-    		}
-
-    		//get new roomX and roomY
-    		let roomX = this.roomX + Math.floor(toX / (this.room.dimension + this.spacing))
-    		let roomY = this.roomY + Math.floor(toY / (this.room.dimension + this.spacing))
-
-    		//if chosen room doesn't exist, ignore request
-    		if(this.rooms[roomX] === undefined
-    			|| this.rooms[roomX][roomY] === undefined)
-    		{
-    			return
-    		}
-
-    		//move to room player clicked on
-    		this.changeRoom(
-				roomX, roomY,
-				inRoomX, inRoomY)
-
     		return
     	}
 
@@ -198,32 +171,6 @@ class Player{
 	    }
 	}
 
-	// zoom(amt){
-	// 	//adjust player so they maintain their position
- // 		//within map
-	// 	if(amt < 0){
-	// 		this.x -= this.inRoomX
-	// 		this.y -= this.inRoomY
-
-	// 		// if(this.path !== null){
-	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x -= this.inRoomX
-	// 		// 		this.path[i].y -= this.inRoomY
-	// 		// 	}
-	// 		// }
-	// 	}else if(amt > 0){
-	// 		this.x += this.inRoomX
-	// 		this.y += this.inRoomY
-
-	// 		// if(this.path !== null){
-	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x += this.inRoomX
-	// 		// 		this.path[i].y += this.inRoomY
-	// 		// 	}
-	// 		// }
-	// 	}
-	// }
-
 	update(){
 		this.graphics.clear()
 
@@ -277,4 +224,4 @@ class Player{
 			this.room.tileSize)
 	}
 }
-module.exports = Player
+module.exports = Enemy

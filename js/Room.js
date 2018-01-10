@@ -3,6 +3,8 @@ let easystarjs = require('easystarjs')
 let colorconvert = require('color-convert')
 var seedrandom = require('seedrandom')
 
+let Enemy = require('./Enemy.js')
+
 class Room{
 	constructor(mapContainer, renderer, tileSize, dimension, x, y, seed){
 		this.mapContainer = mapContainer
@@ -17,10 +19,15 @@ class Room{
 		this.mapContainer.addChild(this.graphics)
 
 		//random color for map
-		this.col ="0x" + colorconvert.hsl.hex(
+		this.col = "0x" + colorconvert.hsl.hex(
 			Math.floor(this.seed * 360), 
 			100, 
-			50) 
+			50)
+		// this.col = "0x" + colorconvert.rgb.hex(
+		// 	Math.floor(this.seed * 255),
+		// 	Math.floor(this.seed * 255),
+		// 	Math.floor(this.seed * 255)
+		// 	)
 
 		//size of each square
 		this.tileSize = tileSize
@@ -49,9 +56,22 @@ class Room{
 
 		this.divisor = 30
 
-		this.threshold = -.15
+		this.threshold = -.25
 
-		this.changer = Math.floor(this.seed * 10) + 1
+		this.changer = Math.floor(this.seed * 5) + 1
+
+		this.enemies = {}
+	}
+
+	createEnemy(spacing, color){
+		for(let i = 0; i < 1; i++){
+			this.enemies[Math.random()] = new Enemy(
+				this,
+				this.mapContainer,
+				spacing,
+				color
+				)
+		}
 	}
 
 	worldToTile(world){
@@ -77,7 +97,7 @@ class Room{
 		}
 	}
 
-	update(mapXOffset, mapYOffset, playerX, playerY){
+	update(mapXOffset, mapYOffset){
 		this.graphics.clear()
 
 		this.graphics.beginFill(this.col, 1)
@@ -173,6 +193,13 @@ class Room{
 					}
 				}
 			}
+		}
+
+		//render enemies
+		for(let i in this.enemies){
+			this.enemies[i].paint(
+				this.tileSize, 
+				this.tileSize)
 		}
 	}
 }

@@ -16,13 +16,13 @@ class Game{
 		this.mapContainer = new PIXI.Container()
 
 		this.rooms = []
-		let mapSize = 10
+		let mapSize = 3
 		let spacing = 2
 		for(let x = 0; x < mapSize; x++){
 			let roomsCol = []
 			for(let y = 0; y < mapSize; y++){
 				let tileSize = 10
-				let dimension = 40
+				let dimension = 50
 				let seed = parseFloat(x + "" + y)
 
 				roomsCol.push(new Room(
@@ -36,10 +36,18 @@ class Game{
 			}
 			this.rooms.push(roomsCol)
 		}
+
+		for(let x = 0; x < mapSize; x++){
+			for(let y = 0; y < mapSize; y++){
+				this.rooms[x][y].createEnemy(spacing, 0x66a3ff)
+			}
+		}
+
 		this.player = new Player(
 			this.rooms,
 			this.mapContainer,
-			spacing)
+			spacing,
+			0xffffff)
 
 		this.walls
 		for(let x = 0; x < mapSize; x++){
@@ -101,7 +109,7 @@ class Game{
 		})
 
 		siplexworker.addEventListener('message', function (ev) {
-		    console.log(ev.data)
+		    // console.log(ev.data)
 		})
 		siplexworker.postMessage(4)
 
@@ -274,7 +282,7 @@ class Game{
 		// this.keepPlayerWithinScreenBoundaries()
 		
 		if(this.keyState["click"]){
-			this.player.click(this.mouseX, this.mouseY, this.camContainer)
+			this.player.tryMove(this.mouseX, this.mouseY, this.camContainer)
 
 		    this.keyState["click"] = false
 		}
@@ -283,15 +291,13 @@ class Game{
 		this.player.update()
 		
 		//update room
-		// for(let i in this.rooms){
-		// 	for(let j in this.rooms[i]){
-		// 		this.rooms[i][j].update(
-		// 			this.mapXOffset, 
-		// 			this.mapYOffset, 
-		// 			this.player.x, 
-		// 			this.player.y)
-		// 	}
-		// }
+		for(let i in this.rooms){
+			for(let j in this.rooms[i]){
+				this.rooms[i][j].update(
+					this.mapXOffset, 
+					this.mapYOffset)
+			}
+		}
 
 		// this.centerCamOnPlayer()
 	}
