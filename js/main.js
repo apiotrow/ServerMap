@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-	let app = new PIXI.Application(600, 600, 
+	let app = new PIXI.Application(1000, 1000, 
 		{
 			antialias: false, 
 			// forceCanvas: true,

@@ -3,13 +3,13 @@
 
 class Player{
 	constructor(rooms, mapContainer){
-		this.roomX = 1
-		this.roomY = 1
-
 		this.rooms = rooms
-		this.room = this.rooms[this.roomX][this.roomY]
-		this.mapContainer = mapContainer
 
+		this.changeRoom(
+			1, 1,
+			3, 0)
+
+		this.mapContainer = mapContainer
 		this.graphics = new PIXI.Graphics()
 		this.mapContainer.addChild(this.graphics)
 		this.path = null
@@ -19,15 +19,27 @@ class Player{
 		this.moving = false
 		this.onSpot = true
 		this.chosenNextDest = []
+	}
+
+	changeRoom(roomX, roomY, inRoomX, inRoomY){
+		//current room indexes
+		this.roomX = roomX
+		this.roomY = roomY
+
 		//position of player in grid
-		this.pathX = 0
-		this.pathY = 0
-		
-		//position of player in container
-		this.x = 0 + (this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
-		this.y = 0 + (this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
-		// this.x = 0
-		// this.y = 0
+		this.inRoomX = inRoomX
+		this.inRoomY = inRoomY
+
+		//current room
+		this.room = this.rooms[this.roomX][this.roomY]
+
+		//x position of player in container
+		this.x = (inRoomX * this.room.tileSize) 
+		+ (this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
+
+		//y position of player in container
+		this.y = (inRoomY * this.room.tileSize) 
+		+ (this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
 	}
 
 	paint(x, y, w, h){
@@ -53,7 +65,7 @@ class Player{
 			return (this.path[this.pathIter].x - this.mapContainer.x) / 
 					this.room.tileSize
 		}
-		return this.pathX
+		return this.inRoomX
 	}
 
 	//player's y position in grid
@@ -62,60 +74,53 @@ class Player{
 			return (this.path[this.pathIter].y - this.mapContainer.y) / 
 					this.room.tileSize
 		}
-		return this.pathY
+		return this.inRoomY
 	}
 
 	destX(){
-		return (this.path[this.pathIter].x) + (this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
+		return (this.path[this.pathIter].x) + 
+		(this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
 	}
 
 	destY(){
-		return (this.path[this.pathIter].y) + (this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
+		return (this.path[this.pathIter].y) + 
+		(this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
 	}
 
 	setPath(fromX, fromY, toX, toY){
 		// if(this.inScreen()){
     	this.room.es.setGrid(this.room.astarmap)
 
+    	//adjust start and end positions so 0,0
+    	//is always upper left corner no matter what room
+    	//we're in
     	fromX -= this.roomX * (this.room.dimension + 1)
-    	fromY -= this.roomX * (this.room.dimension + 1)
-    	toX -= this.roomX * (this.room.dimension + 1)
-    	toY -= this.roomX * (this.room.dimension + 1)
-
-    	console.log(toX)
+    	fromY -= this.roomY * (this.room.dimension + 1)
+    	toX -= this.roomX  * (this.room.dimension + 1)
+    	toY -= this.roomY * (this.room.dimension + 1)
 
     	//check if start or end point is outside
-    	//of astar map
+    	//current room. if it is, move to new room
     	if(fromX < 0 || fromY < 0
     		|| toX < 0 || toY < 0
     		|| fromX >= this.room.astarmap.length || fromY >= this.room.astarmap.length
     		|| toX >= this.room.astarmap.length || toY >= this.room.astarmap.length)
     	{
-    		let roomX = Math.floor(toX / (this.room.dimension + 1))
-    		let roomY = Math.floor(toY / (this.room.dimension + 1))
+    		//get new roomX and roomY
+    		let roomX = this.roomX + Math.floor(toX / (this.room.dimension + 1))
+    		let roomY = this.roomY + Math.floor(toY / (this.room.dimension + 1))
 
-    		if(roomX < 0 || roomY < 0
-    			//TODO: add check for being off right or bottom of map
-    			)
+    		//if player clicked outside of map, ignore
+    		if(this.rooms[roomX] === undefined
+    			|| this.rooms[roomX][roomY] === undefined)
     		{
     			return
     		}
 
-    		let xInRoom = toX % (this.room.dimension + 1)
-    		let yInRoom = toY % (this.room.dimension + 1)
-    		
-    		let newRoom = this.rooms[roomX][roomY]
-
-    		this.room = newRoom
-
-   //  		this.pathX = 0
-			// this.pathY = 0
-
-			// this.roomX = roomX
-			// this.roomY = roomY
-
-   //  		this.x = 0 + (this.roomX * ((this.room.dimension + 1) * this.room.tileSize))
-			// this.y = 0 + (this.roomY * ((this.room.dimension + 1) * this.room.tileSize))
+    		//move to room player clicked on
+    		this.changeRoom(
+				roomX, roomY,
+				0, 0)
 
     		return
     	}
@@ -134,8 +139,8 @@ class Player{
 					(this.path[i].x * this.room.tileSize) - this.mapContainer.x
 				}
 
-				this.pathX = this.gridPosX()
-				this.pathY = this.gridPosY()
+				this.inRoomX = this.gridPosX()
+				this.inRoomY = this.gridPosY()
 			}
 
         	clearInterval(this.moveInterval)
@@ -151,8 +156,8 @@ class Player{
 						this.y = this.destY()
 
 						//update player's grid position
-						this.pathX = this.gridPosX()
-						this.pathY = this.gridPosY()
+						this.inRoomX = this.gridPosX()
+						this.inRoomY = this.gridPosY()
 
 						this.pathIter++
 					}else{
@@ -200,23 +205,23 @@ class Player{
 	// 	//adjust player so they maintain their position
  // 		//within map
 	// 	if(amt < 0){
-	// 		this.x -= this.pathX
-	// 		this.y -= this.pathY
+	// 		this.x -= this.inRoomX
+	// 		this.y -= this.inRoomY
 
 	// 		// if(this.path !== null){
 	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x -= this.pathX
-	// 		// 		this.path[i].y -= this.pathY
+	// 		// 		this.path[i].x -= this.inRoomX
+	// 		// 		this.path[i].y -= this.inRoomY
 	// 		// 	}
 	// 		// }
 	// 	}else if(amt > 0){
-	// 		this.x += this.pathX
-	// 		this.y += this.pathY
+	// 		this.x += this.inRoomX
+	// 		this.y += this.inRoomY
 
 	// 		// if(this.path !== null){
 	// 		// 	for(let i = 0; i < this.path.length; i++){
-	// 		// 		this.path[i].x += this.pathX
-	// 		// 		this.path[i].y += this.pathY
+	// 		// 		this.path[i].x += this.inRoomX
+	// 		// 		this.path[i].y += this.inRoomY
 	// 		// 	}
 	// 		// }
 	// 	}
