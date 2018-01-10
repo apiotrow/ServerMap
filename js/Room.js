@@ -48,12 +48,13 @@ class Room{
 		this.es.enableDiagonals()
 		this.es.disableCornerCutting()
 		this.es.setGrid(this.astarmap)
+		this.es.setIterationsPerCalculation(1000)
 		
 		//will make simplex non-continuous between rooms
-		this.simplex = new SimplexNoise(()=>{return this.seed})
+		// this.simplex = new SimplexNoise(()=>{return this.seed})
 		
 		//makes simplex continuous between rooms
-		// this.simplex = new SimplexNoise(()=>{return 0.45})
+		this.simplex = new SimplexNoise(()=>{return 0.45})
 
 		this.divisor = 30
 
@@ -66,8 +67,9 @@ class Room{
 	}
 
 	createEnemy(spacing, color){
-		for(let i = 0; i < 5; i++){
+		for(let i = 0; i < 20; i++){
 			this.enemies[Math.random()] = new Enemy(
+				0, 0,
 				this,
 				this.mapContainer,
 				spacing,
@@ -99,6 +101,73 @@ class Room{
 		}
 	}
 
+	checkAround(sections, x, y, squares){
+		if(this.pointConnected(x - 1, y - 1, squares)){
+			sections.add(x - 1, y - 1)
+		}
+		if(this.pointConnected(x, y - 1, squares)){
+			sections.add(x, y - 1)
+		}
+		if(this.pointConnected(x + 1, y - 1, squares)){
+			sections.add(x + 1, y - 1)
+		}
+		if(this.pointConnected(x - 1, y, squares)){
+			sections.add(x - 1, y)
+		}
+		if(this.pointConnected(x + 1, y, squares)){
+			sections.add(x + 1, y)
+		}
+		if(this.pointConnected(x - 1, y + 1, squares)){
+			sections.add(x - 1, y + 1)
+		}
+		if(this.pointConnected(x, y + 1, squares)){
+			sections.add(x, y + 1)
+		}
+		if(this.pointConnected(x + 1, y + 1, squares)){
+			sections.add(x + 1, y + 1)
+		}
+	}
+
+	neighborCount(x, y, squares){
+		let count = 0
+
+		if(this.pointConnected(x - 1, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y - 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x - 1, y, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y, squares)){
+			count++
+		}
+		if(this.pointConnected(x - 1, y + 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x, y + 1, squares)){
+			count++
+		}
+		if(this.pointConnected(x + 1, y + 1, squares)){
+			count++
+		}
+
+		return count
+	}
+
+	pointConnected(x, y, squares){
+		if(squares[x] !== undefined){
+			if(squares[x][y] !== undefined){
+				return true
+			}
+		}
+		return false
+	}
+
 	paintMap(){
 		this.graphics.clear()
 
@@ -124,14 +193,6 @@ class Room{
 				y < this.dimension + mapY; 
 				y++)
 			{
-				// let noise = this.simplex.noise2D(
-				// 	(x + this.x + mapXOffset) / (this.divisor / 1), 
-				// 	(y + this.y + mapYOffset) / (this.divisor / 1))
-
-				// let noise2 = this.simplex.noise2D(
-				// 	(x + this.x + mapXOffset) / (this.divisor / this.changer), 
-				// 	(y + this.y + mapYOffset) / (this.divisor / this.changer))
-
 				let noise = this.simplex.noise2D(
 					x / (this.divisor / 1), 
 					y / (this.divisor / 1))

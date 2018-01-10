@@ -4,10 +4,6 @@ class Mover{
 		this.spacing = spacing
 		this.color = color
 
-		// this.changeRoom(
-		// 	1, 1,
-		// 	0, 0)
-
 		this.mapContainer = mapContainer
 		this.graphics = new PIXI.Graphics()
 		this.mapContainer.addChild(this.graphics)
@@ -18,27 +14,6 @@ class Mover{
 		this.moving = false
 		this.onSpot = true
 		this.chosenNextDest = []
-	}
-
-	changeRoom(roomX, roomY, inRoomX, inRoomY){
-		// //current room indexes
-		// this.roomX = roomX
-		// this.roomY = roomY
-
-		//position of player in grid
-		this.inRoomX = inRoomX
-		this.inRoomY = inRoomY
-
-		// //current room
-		// this.room = this.rooms[this.roomX][this.roomY]
-
-		//x position of player in container
-		this.x = (inRoomX * this.room.tileSize) 
-		+ (this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
-
-		//y position of player in container
-		this.y = (inRoomY * this.room.tileSize) 
-		+ (this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
 	paint(w, h){
@@ -82,53 +57,73 @@ class Mover{
 		return screenY + this.mapContainer.y
 	}
 
-	moveToNewRoom(fromX, fromY, toX, toY){
-		//position player will start in in new room
-		let inRoomX = toX % (this.room.dimension + this.spacing)
-		let inRoomY = toY % (this.room.dimension + this.spacing)
-		if(inRoomX < 0){
-			inRoomX = (this.room.dimension + this.spacing) + inRoomX
-		}
-		if(inRoomY < 0){
-			inRoomY = (this.room.dimension + this.spacing) + inRoomY
-		}
+	//update room data
+	changeRoom(roomX, roomY, inRoomX, inRoomY){
+		//position of player in grid
+		this.inRoomX = inRoomX
+		this.inRoomY = inRoomY
 
-		//get new roomX and roomY
-		let roomX = this.roomX + Math.floor(toX / (this.room.dimension + this.spacing))
-		let roomY = this.roomY + Math.floor(toY / (this.room.dimension + this.spacing))
+		//x position of player in container
+		this.x = (inRoomX * this.room.tileSize) 
+		+ (this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
 
-		//if chosen room doesn't exist, ignore request
-		if(this.rooms[roomX] === undefined
-			|| this.rooms[roomX][roomY] === undefined)
-		{
-			return
-		}
-
-		//move to room player clicked on
-		this.changeRoom(
-			roomX, roomY,
-			inRoomX, inRoomY)
+		//y position of player in container
+		this.y = (inRoomY * this.room.tileSize) 
+		+ (this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
-	setPath(fromX, fromY, toX, toY){
+	setPath(toX, toY){
+		//current position
+        let fromX = this.room.worldToTile(this.screenToWorldX(this.x))
+        let fromY = this.room.worldToTile(this.screenToWorldY(this.y))
+
+		//have to do this or movement gets wonky
     	this.room.es.setGrid(this.room.astarmap)
 
-    	//adjust start and end positions so 0,0
-    	//is always upper left corner no matter what room
-    	//we're in
+    	//adjust start and end positions so 0,0 is always 
+    	//upper left corner no matter what room we're in
     	fromX -= this.roomX * (this.room.dimension + this.spacing)
     	fromY -= this.roomY * (this.room.dimension + this.spacing)
     	toX -= this.roomX * (this.room.dimension + this.spacing)
     	toY -= this.roomY * (this.room.dimension + this.spacing)
 
     	//check if start or end point is outside
-    	//current room. if it is, move to new room
+    	//current room. if it is, move to new room.
     	if(fromX < 0 || fromY < 0
     		|| toX < 0 || toY < 0
     		|| fromX >= this.room.astarmap.length || fromY >= this.room.astarmap.length
     		|| toX >= this.room.astarmap.length || toY >= this.room.astarmap.length)
     	{
-    		this.moveToNewRoom(fromX, fromY, toX, toY)
+    		//position player will start in in new room
+			let inRoomX = toX % (this.room.dimension + this.spacing)
+			let inRoomY = toY % (this.room.dimension + this.spacing)
+			if(inRoomX < 0){
+				inRoomX = (this.room.dimension + this.spacing) + inRoomX
+			}
+			if(inRoomY < 0){
+				inRoomY = (this.room.dimension + this.spacing) + inRoomY
+			}
+
+			//get new roomX and roomY
+			let roomX = this.roomX + Math.floor(toX / (this.room.dimension + this.spacing))
+			let roomY = this.roomY + Math.floor(toY / (this.room.dimension + this.spacing))
+
+			//if chosen room doesn't exist, ignore request
+			if(this.rooms[roomX] === undefined
+				|| this.rooms[roomX][roomY] === undefined)
+			{
+				return
+			}
+
+			//move to room player clicked on
+			this.changeRoom(
+				roomX, roomY,
+				inRoomX, inRoomY)
+    		return
+    	}
+
+    	//if destination isn't walkable, return
+    	if(this.room.astarmap[toY][toX] == 0){
     		return
     	}
 
@@ -150,13 +145,18 @@ class Mover{
 				this.inRoomY = this.gridPosY()
 			}
 
+			//change player's destination when they reach
+			//each spot in the path.
+			//
+			//interval fires every time we reach a spot
+        	//in the path
         	clearInterval(this.moveInterval)
         	this.moveInterval = setInterval(()=>{
 				if(this.path !== null){
 					this.onSpot = true
-
 					this.moving = true
 
+					//if path not done, inc
 					if(this.path[this.pathIter] !== undefined){
 						//update player's container position
 						this.x = this.destX()
@@ -168,6 +168,7 @@ class Mover{
 
 						this.pathIter++
 					}else{
+						//path done
 						this.onSpot = true
 						this.moving = false
 						this.pathIter = 1
@@ -181,47 +182,38 @@ class Mover{
         this.room.es.calculate()
 	}
 
-	//what player does click on map
-	tryMove(destTileX, destTileY){
-  		// let destTileX = Math.floor(Math.random() * (this.room.dimension - this.spacing)) + this.room.x
-    //     let destTileY = Math.floor(Math.random() * (this.room.dimension - this.spacing)) + this.room.y
-
-        let playerTileX = this.room.worldToTile(this.screenToWorldX(this.x))
-        let playerTileY = this.room.worldToTile(this.screenToWorldY(this.y))
-
+	tryMove(toX, toY){
+        //if stationary, try to move to chosen
+        //else wait to move until arrived at next spot
     	if(!this.moving){
-    		this.setPath(playerTileX, playerTileY, destTileX, destTileY)
-    	}else{
-	    	this.chosenNextDest.push(destTileX)
-	    	this.chosenNextDest.push(destTileY)
+    		this.setPath(toX, toY)
+    	}
+    	else{
+    		this.chosenNextDest = []
+	    	this.chosenNextDest.push(toX)
+	    	this.chosenNextDest.push(toY)
 	    }
 	}
 
 	update(){
 		this.graphics.clear()
 
-		//change player destination
+		//if player is on a tile and wants
+		//to change destination, do it
 		if(this.onSpot == true && this.chosenNextDest.length > 0){
 			this.path = null
 
-			let destTileX = this.chosenNextDest[0]
-	        let destTileY = this.chosenNextDest[1]
+			let toX = this.chosenNextDest[0]
+	        let toY = this.chosenNextDest[1]
 
 	        this.chosenNextDest = []
 
-	        let playerTileX = this.room.worldToTile(this.screenToWorldX(this.x))
-	        let playerTileY = this.room.worldToTile(this.screenToWorldY(this.y))
-
-	        this.setPath(playerTileX, playerTileY, destTileX, destTileY)
+	        this.setPath(toX, toY)
 		}
 
-		//move player.
-		//has to be down here for change destination mid-path
-		//code won't work
+		//if there's spots left in path, move player
 		if(this.path !== null){
-			if(this.path[this.pathIter] !== undefined)
-				{
-
+			if(this.path[this.pathIter] !== undefined){
 				this.onSpot = false
 
 				let stepSize = this.room.tileSize / (this.moveSpeed / (1000 / 60))

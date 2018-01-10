@@ -3,25 +3,32 @@ let colorconvert = require('color-convert')
 let easystarjs = require('easystarjs')
 
 let work = require('webworkify')
-let siplexworker = work(require('./simplexworker.js'))
+let simplexworker = work(require('./simplexworker.js'))
 
 let Room = require('./Room.js')
 let Player = require('./Player.js')
 
 class Game{
 	constructor(app, canvas){
+		simplexworker.addEventListener('message', function (ev) {
+		    // console.log(ev.data)
+		})
+		simplexworker.postMessage(4)
+
+
 		this.app = app
 
 		this.mapContainer = new PIXI.Container()
 
+		//create rooms
 		this.rooms = []
-		let mapSize = 3
+		let mapSize = 4
 		let spacing = 2
 		for(let x = 0; x < mapSize; x++){
 			let roomsCol = []
 			for(let y = 0; y < mapSize; y++){
 				let tileSize = 10
-				let dimension = 50
+				let dimension = 100
 				let seed = parseFloat(x + "" + y)
 
 				//create room
@@ -39,23 +46,19 @@ class Game{
 
 				//add room to rooms
 				roomsCol.push(newRoom)
-
 			}
 			this.rooms.push(roomsCol)
 		}
-		for(let i in this.rooms){
-			for(let j in this.rooms[i]){
-				this.mapContainer.addChild(this.rooms[i][j].graphics)
-			}
-		}
-
+		//create player
 		this.player = new Player(
+			1, 1, //starting room
+			3, 3, //starting position in room
 			this.rooms,
 			this.mapContainer,
 			spacing,
 			0xffffff)
 
-
+		//setup containers
 		this.camContainer  = new PIXI.Container()
 		this.app.stage.addChild(this.camContainer)
 		this.camContainer.addChild(this.mapContainer)
@@ -63,6 +66,7 @@ class Game{
 		//camera pan speed
 		this.camSpeed = 10
 
+		//setup input
 		this.keyState = {}
 		window.addEventListener('keydown', (e)=>{
 			if(e.which >= 65 && e.which <= 90)
@@ -102,11 +106,6 @@ class Game{
 			this.mouseY = evt.offsetY
 		})
 
-		siplexworker.addEventListener('message', function (ev) {
-		    // console.log(ev.data)
-		})
-		siplexworker.postMessage(4)
-
 		//start update loop
 		let callUpdate = ()=> {
 			this.update()
@@ -122,6 +121,11 @@ class Game{
 		}
 	}
 
+	centerCamOnPlayer(){
+		this.camContainer.x = -this.player.x + (this.app.renderer.width / 2)
+		this.camContainer.y = -this.player.y + (this.app.renderer.height / 2)
+	}
+
 	moveCamY(amt){
 		this.camContainer.y += amt
 	}
@@ -130,107 +134,19 @@ class Game{
 		this.camContainer.x += amt
 	}
 
-	centerCamOnPlayer(){
-		this.camContainer.x = -this.player.x + (this.app.renderer.width / 2)
-		this.camContainer.y = -this.player.y + (this.app.renderer.height / 2)
-	}
-
 	cameraKeyboardControls(){
-		//move grid or container
-		let moveGrid = false
-
-		let gridMoveAmt = 1
 		if(this.keyState['w'] == true){
-			if(moveGrid)
-				this.mapYOffset -= gridMoveAmt
-			else
-				this.moveCamY(this.camSpeed)
+			this.moveCamY(this.camSpeed)
 		}
 		if(this.keyState['s'] == true){
-			if(moveGrid)
-				this.mapYOffset += gridMoveAmt
-			else
-				this.moveCamY(-this.camSpeed)
+			this.moveCamY(-this.camSpeed)
 		}
 		if(this.keyState['d'] == true){
-			if(moveGrid)
-				this.mapXOffset += gridMoveAmt
-			else
-				this.moveCamX(-this.camSpeed)
+			this.moveCamX(-this.camSpeed)
 		}
 		if(this.keyState['a'] == true){
-			if(moveGrid)
-				this.mapXOffset -= gridMoveAmt
-			else
-				this.moveCamX(this.camSpeed)
+			this.moveCamX(this.camSpeed)
 		}
-	}
-
-	checkAround(sections, x, y, squares){
-		if(this.pointConnected(x - 1, y - 1, squares)){
-			sections.add(x - 1, y - 1)
-		}
-		if(this.pointConnected(x, y - 1, squares)){
-			sections.add(x, y - 1)
-		}
-		if(this.pointConnected(x + 1, y - 1, squares)){
-			sections.add(x + 1, y - 1)
-		}
-		if(this.pointConnected(x - 1, y, squares)){
-			sections.add(x - 1, y)
-		}
-		if(this.pointConnected(x + 1, y, squares)){
-			sections.add(x + 1, y)
-		}
-		if(this.pointConnected(x - 1, y + 1, squares)){
-			sections.add(x - 1, y + 1)
-		}
-		if(this.pointConnected(x, y + 1, squares)){
-			sections.add(x, y + 1)
-		}
-		if(this.pointConnected(x + 1, y + 1, squares)){
-			sections.add(x + 1, y + 1)
-		}
-	}
-
-	neighborCount(x, y, squares){
-		let count = 0
-
-		if(this.pointConnected(x - 1, y - 1, squares)){
-			count++
-		}
-		if(this.pointConnected(x, y - 1, squares)){
-			count++
-		}
-		if(this.pointConnected(x + 1, y - 1, squares)){
-			count++
-		}
-		if(this.pointConnected(x - 1, y, squares)){
-			count++
-		}
-		if(this.pointConnected(x + 1, y, squares)){
-			count++
-		}
-		if(this.pointConnected(x - 1, y + 1, squares)){
-			count++
-		}
-		if(this.pointConnected(x, y + 1, squares)){
-			count++
-		}
-		if(this.pointConnected(x + 1, y + 1, squares)){
-			count++
-		}
-
-		return count
-	}
-
-	pointConnected(x, y, squares){
-		if(squares[x] !== undefined){
-			if(squares[x][y] !== undefined){
-				return true
-			}
-		}
-		return false
 	}
 
 	zoom(amt){
@@ -284,7 +200,7 @@ class Game{
 			}
 		}
 
-		this.centerCamOnPlayer()
+		// this.centerCamOnPlayer()
 	}
 }
 
