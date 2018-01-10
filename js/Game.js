@@ -7,7 +7,6 @@ let siplexworker = work(require('./simplexworker.js'))
 
 let Room = require('./Room.js')
 let Player = require('./Player.js')
-let Walls = require('./Walls.js')
 
 class Game{
 	constructor(app, canvas){
@@ -25,21 +24,28 @@ class Game{
 				let dimension = 50
 				let seed = parseFloat(x + "" + y)
 
-				roomsCol.push(new Room(
+				//create room
+				let newRoom = new Room(
 					this.mapContainer, 
 					this.app.renderer,
 					tileSize,
 					dimension,
 					x * (dimension + spacing), 
 					y * (dimension + spacing),
-					seed))
+					seed)
+
+				//create enemies
+				newRoom.createEnemy(spacing, 0x66a3ff)
+
+				//add room to rooms
+				roomsCol.push(newRoom)
+
 			}
 			this.rooms.push(roomsCol)
 		}
-
-		for(let x = 0; x < mapSize; x++){
-			for(let y = 0; y < mapSize; y++){
-				this.rooms[x][y].createEnemy(spacing, 0x66a3ff)
+		for(let i in this.rooms){
+			for(let j in this.rooms[i]){
+				this.mapContainer.addChild(this.rooms[i][j].graphics)
 			}
 		}
 
@@ -49,18 +55,6 @@ class Game{
 			spacing,
 			0xffffff)
 
-		// this.walls
-		// for(let x = 0; x < mapSize; x++){
-		// 	for(let y = 0; y < mapSize; y++){
-
-		// 	}
-		// }
-
-		for(let i in this.rooms){
-			for(let j in this.rooms[i]){
-				this.mapContainer.addChild(this.rooms[i][j].graphics)
-			}
-		}
 
 		this.camContainer  = new PIXI.Container()
 		this.app.stage.addChild(this.camContainer)
@@ -121,27 +115,18 @@ class Game{
 		ticker.add(callUpdate)
 		ticker.start()
 
-		this.mapXOffset = 1
-		this.mapYOffset = 1
-
 		for(let i in this.rooms){
 			for(let j in this.rooms[i]){
-				this.rooms[i][j].paintMap(
-					this.mapXOffset, 
-					this.mapYOffset, 
-					this.player.x, 
-					this.player.y)
+				this.rooms[i][j].paintMap()
 			}
 		}
 	}
 
 	moveCamY(amt){
-		// this.mapContainer.y -= amt
 		this.camContainer.y += amt
 	}
 
 	moveCamX(amt){
-		// this.mapContainer.x -= amt
 		this.camContainer.x += amt
 	}
 
@@ -299,7 +284,7 @@ class Game{
 			}
 		}
 
-		// this.centerCamOnPlayer()
+		this.centerCamOnPlayer()
 	}
 }
 

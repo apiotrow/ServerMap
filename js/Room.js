@@ -48,10 +48,11 @@ class Room{
 		this.es.enableDiagonals()
 		this.es.disableCornerCutting()
 		this.es.setGrid(this.astarmap)
-
-
-		// this.simplex = new SimplexNoise(Math.random)
+		
+		//will make simplex non-continuous between rooms
 		this.simplex = new SimplexNoise(()=>{return this.seed})
+		
+		//makes simplex continuous between rooms
 		// this.simplex = new SimplexNoise(()=>{return 0.45})
 
 		this.divisor = 30
@@ -59,6 +60,7 @@ class Room{
 		this.threshold = -.25
 
 		this.changer = Math.floor(this.seed * 5) + 1
+		// this.changer = 1
 
 		this.enemies = {}
 	}
@@ -97,7 +99,7 @@ class Room{
 		}
 	}
 
-	paintMap(mapXOffset, mapYOffset){
+	paintMap(){
 		this.graphics.clear()
 
 		this.graphics.beginFill(this.col, 1)
@@ -131,12 +133,12 @@ class Room{
 				// 	(y + this.y + mapYOffset) / (this.divisor / this.changer))
 
 				let noise = this.simplex.noise2D(
-					(x + mapXOffset) / (this.divisor / 1), 
-					(y + mapYOffset) / (this.divisor / 1))
+					x / (this.divisor / 1), 
+					y / (this.divisor / 1))
 
 				let noise2 = this.simplex.noise2D(
-					(x + mapXOffset) / (this.divisor / this.changer), 
-					(y + mapYOffset) / (this.divisor / this.changer))
+					x / (this.divisor / this.changer), 
+					y / (this.divisor / this.changer))
 
 				noise = (noise + (noise2)) / 2
 
