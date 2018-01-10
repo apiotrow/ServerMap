@@ -49,12 +49,12 @@ class Game{
 			spacing,
 			0xffffff)
 
-		this.walls
-		for(let x = 0; x < mapSize; x++){
-			for(let y = 0; y < mapSize; y++){
+		// this.walls
+		// for(let x = 0; x < mapSize; x++){
+		// 	for(let y = 0; y < mapSize; y++){
 
-			}
-		}
+		// 	}
+		// }
 
 		for(let i in this.rooms){
 			for(let j in this.rooms[i]){
@@ -126,7 +126,7 @@ class Game{
 
 		for(let i in this.rooms){
 			for(let j in this.rooms[i]){
-				this.rooms[i][j].update(
+				this.rooms[i][j].paintMap(
 					this.mapXOffset, 
 					this.mapYOffset, 
 					this.player.x, 

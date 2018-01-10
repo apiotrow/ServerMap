@@ -20,6 +20,11 @@ class Enemy{
 		this.moving = false
 		this.onSpot = true
 		this.chosenNextDest = []
+
+
+		setInterval(()=>{
+			this.tryMove()
+		}, (Math.random() * 2000) + 1000)
 	}
 
 	changeRoom(room, inRoomX, inRoomY){
@@ -156,9 +161,12 @@ class Enemy{
 	}
 
 	//what player does click on map
-	tryMove(mouseX, mouseY, camContainer){
-		let destTileX = this.room.worldToTile(mouseX - camContainer.x)
-        let destTileY = this.room.worldToTile(mouseY - camContainer.y)
+	tryMove(){
+		// let destTileX = this.room.worldToTile(mouseX - camContainer.x)
+  //       let destTileY = this.room.worldToTile(mouseY - camContainer.y)
+
+  		let destTileX = Math.floor(Math.random() * (this.room.dimension - this.spacing)) + this.room.x
+        let destTileY = Math.floor(Math.random() * (this.room.dimension - this.spacing)) + this.room.y
 
         let playerTileX = this.room.worldToTile(this.screenToWorldX(this.x))
         let playerTileY = this.room.worldToTile(this.screenToWorldY(this.y))

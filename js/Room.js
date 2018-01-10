@@ -64,7 +64,7 @@ class Room{
 	}
 
 	createEnemy(spacing, color){
-		for(let i = 0; i < 1; i++){
+		for(let i = 0; i < 5; i++){
 			this.enemies[Math.random()] = new Enemy(
 				this,
 				this.mapContainer,
@@ -97,7 +97,7 @@ class Room{
 		}
 	}
 
-	update(mapXOffset, mapYOffset){
+	paintMap(mapXOffset, mapYOffset){
 		this.graphics.clear()
 
 		this.graphics.beginFill(this.col, 1)
@@ -194,12 +194,12 @@ class Room{
 				}
 			}
 		}
+	}
 
-		//render enemies
+	update(){
+		//update enemies
 		for(let i in this.enemies){
-			this.enemies[i].paint(
-				this.tileSize, 
-				this.tileSize)
+			this.enemies[i].update()
 		}
 	}
 }
