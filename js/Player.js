@@ -2,8 +2,8 @@
 let Mover = require('./Mover.js')
 
 class Player extends Mover{
-	constructor(roomX, roomY, inRoomX, inRoomY, rooms, mapContainer, spacing, color){
-		super(rooms[roomX][roomY], mapContainer, spacing, color)
+	constructor(roomX, roomY, inRoomX, inRoomY, rooms, mapContainer, spacing, color, speed){
+		super(rooms[roomX][roomY], mapContainer, spacing, color, speed)
 
 		this.rooms = rooms
 

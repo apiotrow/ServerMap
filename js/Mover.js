@@ -1,6 +1,6 @@
 
 class Mover{
-	constructor(room, mapContainer, spacing, color){
+	constructor(room, mapContainer, spacing, color, speed){
 		this.spacing = spacing
 		this.color = color
 
@@ -10,51 +10,10 @@ class Mover{
 		this.path = null
 		this.pathIter = 1
 		this.moveInterval
-		this.moveSpeed = (1000 / 60) * room.tileSize * 0.5
+		this.moveSpeed = (1000 / 60) * room.tileSize * speed
 		this.moving = false
 		this.onSpot = true
 		this.chosenNextDest = []
-	}
-
-	paint(w, h){
-		this.graphics.beginFill(this.color, 1)
-		this.graphics.drawRect(this.x, this.y, w, h)
-	}
-
-	//player's x position in grid
-	gridPosX(){
-		if(this.path.length != 0){
-			return (this.path[this.pathIter].x - this.mapContainer.x) / 
-					this.room.tileSize
-		}
-		return this.inRoomX
-	}
-
-	//player's y position in grid
-	gridPosY(){
-		if(this.path.length != 0){
-			return (this.path[this.pathIter].y - this.mapContainer.y) / 
-					this.room.tileSize
-		}
-		return this.inRoomY
-	}
-
-	destX(){
-		return (this.path[this.pathIter].x) + 
-		(this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
-	}
-
-	destY(){
-		return (this.path[this.pathIter].y) + 
-		(this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
-	}
-
-	screenToWorldX(screenX){
-		return screenX + this.mapContainer.x
-	}
-
-	screenToWorldY(screenY){
-		return screenY + this.mapContainer.y
 	}
 
 	//update room data
@@ -72,7 +31,59 @@ class Mover{
 		+ (this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
 	}
 
+	paint(w, h){
+		this.graphics.beginFill(this.color, 1)
+		this.graphics.drawRect(this.x, this.y, w, h)
+	}
+
+	//player's x position in grid, local to room
+	gridPosX(){
+		if(this.path !== null && this.path[this.pathIter] !== undefined){
+			return (this.path[this.pathIter].x - this.mapContainer.x) / 
+					this.room.tileSize
+		}
+		return this.inRoomX
+	}
+
+	//player's y position in grid, local to room
+	gridPosY(){
+		if(this.path !== null && this.path[this.pathIter] !== undefined){
+			return (this.path[this.pathIter].y - this.mapContainer.y) / 
+					this.room.tileSize
+		}
+		return this.inRoomY
+	}
+
+	//global grid destination
+	globalX(){
+		if(this.path !== null && this.path[this.pathIter] !== undefined){
+			return (this.path[this.pathIter].x) + 
+				(this.roomX * ((this.room.dimension + this.spacing) * this.room.tileSize))
+		}
+		return this.x
+	}
+
+	//global grid destination
+	globalY(){
+		if(this.path !== null && this.path[this.pathIter] !== undefined){
+			return (this.path[this.pathIter].y) + 
+				(this.roomY * ((this.room.dimension + this.spacing) * this.room.tileSize))
+		}
+		return this.y
+	}
+
+	screenToWorldX(screenX){
+		return screenX + this.mapContainer.x
+	}
+
+	screenToWorldY(screenY){
+		return screenY + this.mapContainer.y
+	}
+
 	setPath(toX, toY){
+		// let origToX = toX
+		// let origToY = toY
+
 		//current position
         let fromX = this.room.worldToTile(this.screenToWorldX(this.x))
         let fromY = this.room.worldToTile(this.screenToWorldY(this.y))
@@ -82,10 +93,10 @@ class Mover{
 
     	//adjust start and end positions so 0,0 is always 
     	//upper left corner no matter what room we're in
-    	fromX -= this.roomX * (this.room.dimension + this.spacing)
-    	fromY -= this.roomY * (this.room.dimension + this.spacing)
-    	toX -= this.roomX * (this.room.dimension + this.spacing)
-    	toY -= this.roomY * (this.room.dimension + this.spacing)
+    	fromX -= (this.roomX * (this.room.dimension + this.spacing))
+    	fromY -= (this.roomY * (this.room.dimension + this.spacing))
+    	toX -= (this.roomX * (this.room.dimension + this.spacing))
+    	toY -= (this.roomY * (this.room.dimension + this.spacing))
 
     	//check if start or end point is outside
     	//current room. if it is, move to new room.
@@ -127,7 +138,18 @@ class Mover{
     		return
     	}
 
+		// for(let i in this.enemies){
+		// 	if(this.enemies[i] !== this){
+		// 		this.es.avoidAdditionalPoint(
+		// 			this.enemies[i].inRoomX, 
+		// 			this.enemies[i].inRoomY
+		// 			)
+		// 	}
+		// }
+
         this.room.es.findPath(fromX, fromY, toX, toY, (path)=>{
+        	// this.room.es.stopAvoidingAllAdditionalPoints()
+
         	this.pathIter = 1
         	this.path = path
 
@@ -159,8 +181,9 @@ class Mover{
 					//if path not done, inc
 					if(this.path[this.pathIter] !== undefined){
 						//update player's container position
-						this.x = this.destX()
-						this.y = this.destY()
+						//to be the spot they're moving to next
+						this.x = this.globalX()
+						this.y = this.globalY()
 
 						//update player's grid position
 						this.inRoomX = this.gridPosX()
@@ -218,18 +241,18 @@ class Mover{
 
 				let stepSize = this.room.tileSize / (this.moveSpeed / (1000 / 60))
 
-				if(this.x < this.destX())
+				if(this.x < this.globalX())
 				{
 					this.x += stepSize
-				}else if(this.x > this.destX())
+				}else if(this.x > this.globalX())
 				{
 					this.x -= stepSize
 				}
 
-				if(this.y < this.destY())
+				if(this.y < this.globalY())
 				{
 					this.y += stepSize
-				}else if(this.y > this.destY())
+				}else if(this.y > this.globalY())
 				{
 					this.y -= stepSize
 				}

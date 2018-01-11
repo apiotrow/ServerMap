@@ -23,11 +23,6 @@ class Room{
 			Math.floor(this.seed * 360), 
 			100, 
 			50)
-		// this.col = "0x" + colorconvert.rgb.hex(
-		// 	Math.floor(this.seed * 255),
-		// 	Math.floor(this.seed * 255),
-		// 	Math.floor(this.seed * 255)
-		// 	)
 
 		//size of each square
 		this.tileSize = tileSize
@@ -48,7 +43,7 @@ class Room{
 		this.es.enableDiagonals()
 		this.es.disableCornerCutting()
 		this.es.setGrid(this.astarmap)
-		this.es.setIterationsPerCalculation(1000)
+		// this.es.setIterationsPerCalculation(1000)
 		
 		//will make simplex non-continuous between rooms
 		// this.simplex = new SimplexNoise(()=>{return this.seed})
@@ -67,14 +62,13 @@ class Room{
 	}
 
 	createEnemy(spacing, color){
-		for(let i = 0; i < 20; i++){
+		for(let i = 0; i < 10; i++){
 			this.enemies[Math.random()] = new Enemy(
-				0, 0,
 				this,
 				this.mapContainer,
 				spacing,
-				color
-				)
+				color,
+				1)
 		}
 	}
 
@@ -249,8 +243,8 @@ class Room{
 						// }
 
 						this.paintSquare(
-							x * this.tileSize, 
-							y * this.tileSize, 
+							(x) * this.tileSize, 
+							(y) * this.tileSize, 
 							this.tileSize, 
 							this.tileSize)
 					}

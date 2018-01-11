@@ -23,7 +23,7 @@ class Game{
 		//create rooms
 		this.rooms = []
 		let mapSize = 4
-		let spacing = 2
+		let spacing = 0
 		for(let x = 0; x < mapSize; x++){
 			let roomsCol = []
 			for(let y = 0; y < mapSize; y++){
@@ -52,11 +52,12 @@ class Game{
 		//create player
 		this.player = new Player(
 			1, 1, //starting room
-			3, 3, //starting position in room
+			0, 0, //starting position in room
 			this.rooms,
 			this.mapContainer,
 			spacing,
-			0xffffff)
+			0xffffff,
+			0.5)
 
 		//setup containers
 		this.camContainer  = new PIXI.Container()
