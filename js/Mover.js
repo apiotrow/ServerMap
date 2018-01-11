@@ -37,7 +37,7 @@ class Mover{
 	}
 
 	//player's x position in grid, local to room
-	gridPosX(){
+	gridX(){
 		if(this.path !== null && this.path[this.pathIter] !== undefined){
 			return (this.path[this.pathIter].x - this.mapContainer.x) / 
 					this.room.tileSize
@@ -46,7 +46,7 @@ class Mover{
 	}
 
 	//player's y position in grid, local to room
-	gridPosY(){
+	gridY(){
 		if(this.path !== null && this.path[this.pathIter] !== undefined){
 			return (this.path[this.pathIter].y - this.mapContainer.y) / 
 					this.room.tileSize
@@ -163,8 +163,8 @@ class Mover{
 					(this.path[i].x * this.room.tileSize) - this.mapContainer.x
 				}
 
-				this.inRoomX = this.gridPosX()
-				this.inRoomY = this.gridPosY()
+				this.inRoomX = this.gridX()
+				this.inRoomY = this.gridY()
 			}
 
 			//change player's destination when they reach
@@ -186,8 +186,8 @@ class Mover{
 						this.y = this.globalY()
 
 						//update player's grid position
-						this.inRoomX = this.gridPosX()
-						this.inRoomY = this.gridPosY()
+						this.inRoomX = this.gridX()
+						this.inRoomY = this.gridY()
 
 						this.pathIter++
 					}else{

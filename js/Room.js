@@ -6,9 +6,9 @@ var seedrandom = require('seedrandom')
 let Enemy = require('./Enemy.js')
 
 class Room{
-	constructor(mapContainer, renderer, tileSize, dimension, x, y, seed){
+	constructor(mapContainer, tileSize, dimension, x, y, seed){
 		this.mapContainer = mapContainer
-		this.renderer = renderer
+		// this.renderer = renderer
 		this.seed = seedrandom(seed)()
 
 		this.x = x
@@ -80,20 +80,20 @@ class Room{
 		this.graphics.drawRect(x, y, w, h)
 	}
 
-	zoom(amt){
-		this.tileSize += amt
-		this.dimension = Math.floor(this.renderer.width / this.tileSize)
+	// zoom(amt){
+	// 	this.tileSize += amt
+	// 	this.dimension = Math.floor(this.renderer.width / this.tileSize)
 
-		//remake astar map since we just changed size of map
-		this.astarmap = []
-		for(let x = 0; x < this.dimension; x++){
-			let aStarMapCol = []
-			for(let y = 0; y < this.dimension; y++){
-				aStarMapCol.push(0)
-			}
-			this.astarmap.push(aStarMapCol)
-		}
-	}
+	// 	//remake astar map since we just changed size of map
+	// 	this.astarmap = []
+	// 	for(let x = 0; x < this.dimension; x++){
+	// 		let aStarMapCol = []
+	// 		for(let y = 0; y < this.dimension; y++){
+	// 			aStarMapCol.push(0)
+	// 		}
+	// 		this.astarmap.push(aStarMapCol)
+	// 	}
+	// }
 
 	checkAround(sections, x, y, squares){
 		if(this.pointConnected(x - 1, y - 1, squares)){

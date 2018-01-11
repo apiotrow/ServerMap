@@ -7,6 +7,7 @@ let simplexworker = work(require('./simplexworker.js'))
 
 let Room = require('./Room.js')
 let Player = require('./Player.js')
+let Music = require('./Music.js')
 
 class Game{
 	constructor(app, canvas){
@@ -15,6 +16,7 @@ class Game{
 		})
 		simplexworker.postMessage(4)
 
+		this.music = new Music()
 
 		this.app = app
 
@@ -34,7 +36,6 @@ class Game{
 				//create room
 				let newRoom = new Room(
 					this.mapContainer, 
-					this.app.renderer,
 					tileSize,
 					dimension,
 					x * (dimension + spacing), 
@@ -201,7 +202,7 @@ class Game{
 			}
 		}
 
-		// this.centerCamOnPlayer()
+		this.centerCamOnPlayer()
 	}
 }
 

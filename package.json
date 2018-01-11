@@ -16,6 +16,7 @@
     "pixi.js": "^4.6.0",
     "seedrandom": "^2.4.3",
     "simplex-noise": "^2.3.0",
+    "tone": "^0.12.51",
     "webworkify": "^1.5.0",
     "ws": "^3.2.0"
   },
