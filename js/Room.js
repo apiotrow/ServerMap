@@ -30,20 +30,7 @@ class Room{
 		//width/height of map
 		this.dimension = dimension
 
-		this.astarmap = []
-		for(let x = 0; x < this.dimension; x++){
-			let aStarMapCol = []
-			for(let y = 0; y < this.dimension; y++){
-				aStarMapCol.push(0)
-			}
-			this.astarmap.push(aStarMapCol)
-		}
-		this.es = new easystarjs.js()
-		this.es.setAcceptableTiles(1)
-		this.es.enableDiagonals()
-		this.es.disableCornerCutting()
-		this.es.setGrid(this.astarmap)
-		// this.es.setIterationsPerCalculation(1000)
+		
 		
 		//will make simplex non-continuous between rooms
 		// this.simplex = new SimplexNoise(()=>{return this.seed})
@@ -59,6 +46,126 @@ class Room{
 		// this.changer = 1
 
 		this.enemies = {}
+
+		
+
+		// for(
+		// 	let x = mapX; 
+		// 	x < this.dimension + mapX; 
+		// 	x++)
+		// {
+		// 	yIter = 0
+		// 	for(
+		// 		let y = mapY; 
+		// 		y < this.dimension + mapY; 
+		// 		y++)
+		// 	{
+		// 		let noise = this.simplex.noise2D(
+		// 			x / (this.divisor / 1), 
+		// 			y / (this.divisor / 1))
+
+		// 		let noise2 = this.simplex.noise2D(
+		// 			x / (this.divisor / this.changer), 
+		// 			y / (this.divisor / this.changer))
+
+		// 		noise = (noise + (noise2)) / 2
+
+		// 		if(noise < this.threshold){
+		// 			if(squares[x] === undefined){
+		// 				squares[x] = {}
+		// 			}
+		// 			if(squares[x][y] === undefined){
+		// 				squares[x][y] = 0
+		// 			}
+
+		// 			if(this.astarmap[yIter] !== undefined
+		// 				&& this.astarmap[yIter][xIter] !== undefined)
+		// 			{
+		// 				this.astarmap[yIter][xIter] = 0
+		// 			}
+		// 		}else{
+		// 			if(this.astarmap[yIter] !== undefined
+		// 				&& this.astarmap[yIter][xIter] !== undefined)
+		// 			{
+		// 				this.astarmap[yIter][xIter] = 1
+		// 			}
+		// 		}
+		// 		yIter++
+		// 	}
+		// 	xIter++
+		// }
+
+		this.astarmap = []
+		for(let x = 0; x < this.dimension; x++){
+			let aStarMapCol = []
+			for(let y = 0; y < this.dimension; y++){
+
+				// let noise = this.simplex.noise2D(
+				// 	x / (this.divisor / 1), 
+				// 	y / (this.divisor / 1))
+
+				// let noise2 = this.simplex.noise2D(
+				// 	x / (this.divisor / this.changer), 
+				// 	y / (this.divisor / this.changer))
+
+				// noise = (noise + (noise2)) / 2
+
+				// if(noise < this.threshold){
+				// 	aStarMapCol.push(0)
+				// }else{
+				// 	aStarMapCol.push(1)
+				// }
+
+				aStarMapCol.push(0)
+			}
+			this.astarmap.push(aStarMapCol)
+		}
+
+		let xIter = 0
+		let yIter = 0
+
+		let regX = (-this.mapContainer.x / this.tileSize)
+		let regY = (-this.mapContainer.y / this.tileSize)
+		let mapX = Math.floor(regX) + this.x
+		let mapY = Math.floor(regY) + this.y
+		for(
+			let x = mapX; 
+			x < this.dimension + mapX; 
+			x++)
+		{
+			yIter = 0
+			for(
+				let y = mapY; 
+				y < this.dimension + mapY; 
+				y++)
+			{
+				let noise = this.simplex.noise2D(
+					x / (this.divisor / 1), 
+					y / (this.divisor / 1))
+
+				let noise2 = this.simplex.noise2D(
+					x / (this.divisor / this.changer), 
+					y / (this.divisor / this.changer))
+
+				noise = (noise + (noise2)) / 2
+
+				if(noise < this.threshold){
+
+						this.astarmap[yIter][xIter] = 0
+
+				}else{
+						this.astarmap[yIter][xIter] = 1
+				}
+				yIter++
+			}
+			xIter++
+		}
+		this.es = new easystarjs.js()
+		this.es.setAcceptableTiles(1)
+		this.es.enableDiagonals()
+		this.es.disableCornerCutting()
+		this.es.setGrid(this.astarmap)
+		// this.es.setIterationsPerCalculation(1000)
 	}
 
 	createEnemy(spacing, color){
@@ -256,6 +363,11 @@ class Room{
 	update(){
 		//update enemies
 		for(let i in this.enemies){
+
+			// if(this.enemies[i].foundInitLocation){
+			// 	this.enemies[i].findWalkableSpot()
+			// }
+
 			this.enemies[i].update()
 		}
 	}

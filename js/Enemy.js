@@ -5,17 +5,21 @@ class Enemy extends Mover{
 	constructor(room, mapContainer, spacing, color, speed){
 		super(room, mapContainer, spacing, color, speed)
 
+		this.foundInitLocation = false
+		let randSpot = this.findWalkableSpot(room)
+		// console.log(room.astarmap[randSpot[0]][randSpot[1]])
+
 		// let start = this.findWalkableSpot()
 		this.changeRoom(
 			room,
-			0, 0)
-this.findWalkableSpot()
+			randSpot[1], randSpot[0])
+
 		// setInterval(()=>{
 		// 	this.tryMove()
 		// }, (Math.random() * 2000) + 500)
 	}
 
-	findWalkableSpot(){
+	findWalkableSpot(room){
 		// let destTileX = Math.floor(Math.random() 
   // 			* (this.room.dimension - this.spacing)) + this.room.x
 
@@ -25,24 +29,23 @@ this.findWalkableSpot()
   //       let toX = destTileX - (this.roomX * (this.room.dimension + this.spacing))
   //   	let toY = destTileY - (this.roomY * (this.room.dimension + this.spacing))
 
-    	let randIndexX = Math.floor(Math.random() * this.room.astarmap.length)
-	    let randIndexY = Math.floor(Math.random() * this.room.astarmap[randIndexX].length)
-	    console.log(this.room.astarmap[randIndexY][randIndexX])
+    	let randIndexY = Math.floor(Math.random() * room.astarmap.length)
+	    let randIndexX = Math.floor(Math.random() * room.astarmap[randIndexY].length)
 	    // console.log(randIndexY)
 
     	//try until we find a walkable one
-      //   while(this.room.astarmap[toY][toX] == 0){
-      //   	destTileX = Math.floor(Math.random() 
-  				// * (this.room.dimension - this.spacing)) + this.room.x
+        while(room.astarmap[randIndexX][randIndexY] == 0){
+        	randIndexY = Math.floor(Math.random() * room.astarmap.length)
+	    	randIndexX = Math.floor(Math.random() * room.astarmap[randIndexY].length)
+        }
 
-      //   	destTileY = Math.floor(Math.random() 
-      //   		* (this.room.dimension - this.spacing)) + this.room.y
+        this.foundInitLocation = true
 
-      //   	toX = destTileX - (this.roomX * (this.room.dimension + this.spacing))
-    		// toY = destTileY - (this.roomY * (this.room.dimension + this.spacing))
-      //   }
+   //      this.changeRoom(
+			// room,
+			// 0, 0)
 
-      //   return [toX, toY]
+        return [randIndexX, randIndexY]
 	}
 
 	changeRoom(room, inRoomX, inRoomY){

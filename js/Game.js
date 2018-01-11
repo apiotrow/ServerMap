@@ -202,7 +202,7 @@ class Game{
 			}
 		}
 
-		this.centerCamOnPlayer()
+		// this.centerCamOnPlayer()
 
 		this.music.update()
 	}
