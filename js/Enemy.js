@@ -5,45 +5,34 @@ class Enemy extends Mover{
 	constructor(room, mapContainer, spacing, color, speed){
 		super(room, mapContainer, spacing, color, speed)
 
-		this.foundInitLocation = false
-		let randSpot = this.findWalkableSpot(room)
-		// console.log(room.astarmap[randSpot[0]][randSpot[1]])
-
-		// let start = this.findWalkableSpot()
 		this.changeRoom(
 			room,
-			randSpot[1], randSpot[0])
+			0, 0)
+
+		this.setInitLocation()
 
 		// setInterval(()=>{
 		// 	this.tryMove()
 		// }, (Math.random() * 2000) + 500)
 	}
 
-	findWalkableSpot(room){
-		// let destTileX = Math.floor(Math.random() 
-  // 			* (this.room.dimension - this.spacing)) + this.room.x
+	setInitLocation(){
+		let start = this.findWalkableSpot()
 
-  //       let destTileY = Math.floor(Math.random() 
-  //       	* (this.room.dimension - this.spacing)) + this.room.y
+		this.changeRoom(
+			this.room,
+			start[0], start[1])
+	}
 
-  //       let toX = destTileX - (this.roomX * (this.room.dimension + this.spacing))
-  //   	let toY = destTileY - (this.roomY * (this.room.dimension + this.spacing))
-
-    	let randIndexY = Math.floor(Math.random() * room.astarmap.length)
-	    let randIndexX = Math.floor(Math.random() * room.astarmap[randIndexY].length)
-	    // console.log(randIndexY)
+	findWalkableSpot(){
+    	let randIndexX = Math.floor(Math.random() * this.room.astarmap.length)
+	    let randIndexY = Math.floor(Math.random() * this.room.astarmap[randIndexX].length)
 
     	//try until we find a walkable one
-        while(room.astarmap[randIndexX][randIndexY] == 0){
-        	randIndexY = Math.floor(Math.random() * room.astarmap.length)
-	    	randIndexX = Math.floor(Math.random() * room.astarmap[randIndexY].length)
+        while(this.room.astarmap[randIndexY][randIndexX] == 0){
+        	randIndexX = Math.floor(Math.random() * this.room.astarmap.length)
+	    	randIndexY = Math.floor(Math.random() * this.room.astarmap[randIndexX].length)
         }
-
-        this.foundInitLocation = true
-
-   //      this.changeRoom(
-			// room,
-			// 0, 0)
 
         return [randIndexX, randIndexY]
 	}

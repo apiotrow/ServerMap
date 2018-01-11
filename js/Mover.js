@@ -121,7 +121,7 @@ class Mover{
 
 			//if chosen room doesn't exist, ignore request
 			if(this.rooms[roomX] === undefined
-				|| this.rooms[roomX][roomY] === undefined)
+				&& this.rooms[roomX][roomY] === undefined)
 			{
 				return
 			}
